@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-palette="classic">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Dots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --ink:#1A1A1B; --muted:#787C7E; --line:#D3D6DA;
+  --tile-border:#D3D6DA; --tile-filled:#878A8C;
+  --key:#D3D6DA; --key-ink:#1A1A1B; --black-key:#1A1A1B;
+  --absent:#787C7E; --on:#FFFFFF; --panel:#FFFFFF; --backdrop:rgba(255,255,255,.55);
+  --correct:#6AAA64; --present:#C9B458;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-palette="contrast"]{--correct:#F5793A; --present:#85C0F9}
+:root[data-palette="berry"]{--correct:#2BAE8E; --present:#E05FA0}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121213; --ink:#F8F8F8; --muted:#818384; --line:#3A3A3C;
+    --tile-border:#3A3A3C; --tile-filled:#565758;
+    --key:#818384; --key-ink:#F8F8F8; --black-key:#262628;
+    --absent:#3A3A3C; --panel:#1E1E20; --backdrop:rgba(0,0,0,.55);
+    --correct:#538D4E; --present:#B59F3B;
+    color-scheme: dark;
+  }
+  :root:not([data-theme="light"])[data-palette="contrast"]{--correct:#F5793A; --present:#85C0F9}
+  :root:not([data-theme="light"])[data-palette="berry"]{--correct:#1F8F74; --present:#C24A86}
+}
+:root[data-theme="dark"]{
+  --bg:#121213; --ink:#F8F8F8; --muted:#818384; --line:#3A3A3C;
+  --tile-border:#3A3A3C; --tile-filled:#565758;
+  --key:#818384; --key-ink:#F8F8F8; --black-key:#262628;
+  --absent:#3A3A3C; --panel:#1E1E20; --backdrop:rgba(0,0,0,.55);
+  --correct:#538D4E; --present:#B59F3B;
+  color-scheme: dark;
+}
+:root[data-theme="dark"][data-palette="contrast"]{--correct:#F5793A; --present:#85C0F9}
+:root[data-theme="dark"][data-palette="berry"]{--correct:#1F8F74; --present:#C24A86}
+
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif;line-height:1.4}
+button{font:inherit;color:inherit}
+[hidden]{display:none !important}
+
+/* header */
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 12px;border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-size:1.9rem;font-weight:800;letter-spacing:.01em;text-align:center}
+.icons{display:flex;gap:4px}
+.icons.right{justify-content:flex-end}
+.icon{width:40px;height:40px;border:none;background:transparent;display:grid;place-items:center;cursor:pointer;border-radius:50%}
+.icon svg{width:26px;height:26px}
+.qmark{width:24px;height:24px;border:2.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem}
+
+main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
+.game{display:grid;grid-template-columns:auto minmax(300px,440px);gap:44px;align-items:start;justify-content:center}
+@media (max-width:800px){.game{grid-template-columns:1fr;gap:26px;justify-items:center}.side{width:100%;max-width:460px}}
+
+/* listen row */
+.listen{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px}
+.play{width:60px;height:60px;border-radius:50%;border:none;background:var(--ink);color:var(--bg);display:grid;place-items:center;cursor:pointer;flex:none;position:relative}
+.play svg{width:24px;height:24px;margin-left:3px}
+.play:disabled{opacity:.3;cursor:not-allowed}
+.play.playing::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid var(--ink);animation:ring 1.2s ease-out infinite}
+@keyframes ring{from{opacity:.7;transform:scale(.95)}to{opacity:0;transform:scale(1.18)}}
+.keyname{font-weight:700;font-size:1.05rem}
+.pips{display:flex;gap:6px;margin-top:5px;align-items:center}
+.pips span{width:11px;height:11px;border-radius:50%;background:var(--ink);border:2px solid var(--ink)}
+.pips span.used{background:transparent;opacity:.4}
+.pips small{color:var(--muted);margin-left:4px;font-size:.8rem;font-weight:600}
+.hint{text-align:center;color:var(--muted);font-weight:600;font-size:.9rem;min-height:2.6em;margin:4px 0 10px;max-width:330px;margin-left:auto;margin-right:auto}
+
+/* grid */
+.grid{--tile:min(62px, calc((100vw - 48px) / 5));display:grid;grid-template-columns:repeat(5,var(--tile));gap:5px;justify-content:center;perspective:700px}
+.tile{width:var(--tile);height:var(--tile);border:2px solid var(--tile-border);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-weight:800;font-size:calc(var(--tile) * .36);line-height:1;color:var(--ink)}
+.tile .oct{font-size:.45em;font-weight:700;margin-top:2px;opacity:.75}
+.tile.filled{border-color:var(--tile-filled)}
+.tile.correct,.tile.present,.tile.absent{color:var(--on)}
+.tile.correct{background:var(--correct);border-color:var(--correct)}
+.tile.present{background:var(--present);border-color:var(--present)}
+.tile.absent{background:var(--absent);border-color:var(--absent)}
+.tile.pop{animation:pop .1s ease-in}
+.tile.flip{animation:flip .6s ease-in-out}
+.tile.shake{animation:shake .5s}
+.tile.win{animation:bounce 1s}
+@keyframes pop{50%{transform:scale(1.1)}}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(-90deg)}100%{transform:rotateX(0)}}
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+@keyframes bounce{0%,20%{transform:translateY(0)}40%{transform:translateY(-26px)}50%{transform:translateY(5px)}60%{transform:translateY(-13px)}80%{transform:translateY(2px)}100%{transform:translateY(0)}}
+
+/* keyboard */
+.seg{display:inline-flex;background:var(--key);border-radius:6px;padding:3px;margin-bottom:12px}
+.seg button{border:none;background:transparent;font-weight:700;font-size:.85rem;padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--key-ink)}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
+.kbd{position:relative;display:flex;gap:3px;height:150px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.white{flex:1;border:none;background:var(--key);color:var(--key-ink);border-radius:0 0 4px 4px;cursor:pointer;
+  display:flex;align-items:flex-end;justify-content:center;padding:0 0 6px;font-size:.65rem;font-weight:700}
+.black{position:absolute;top:0;height:60%;background:var(--black-key);border:2px solid var(--bg);border-top:none;border-radius:0 0 4px 4px;z-index:2;cursor:pointer;padding:0}
+.white.correct,.black.correct{background:var(--correct);color:var(--on)}
+.white.present,.black.present{background:var(--present);color:var(--on)}
+.white.absent,.black.absent{background:var(--absent);color:var(--on)}
+.white.down,.black.down{filter:brightness(.85)}
+
+.actions{display:flex;gap:6px;margin-top:10px}
+.wkey{height:58px;border:none;border-radius:4px;background:var(--key);color:var(--key-ink);font-weight:700;font-size:.8rem;
+  letter-spacing:.02em;cursor:pointer;display:grid;place-items:center;padding:0 12px;text-transform:uppercase}
+.wkey.grow{flex:1}
+.actions:has(#hear[hidden]) #check{flex:1}
+.wkey svg{width:24px;height:24px}
+.wkey:disabled{opacity:.45;cursor:not-allowed}
+.wkey.ready{background:var(--ink);color:var(--bg)}
+.newgame{margin-top:10px;width:100%;height:40px;background:transparent;border:2px solid var(--key)}
+.tile.lost{border-color:var(--tile-border);background:repeating-linear-gradient(135deg,transparent 0 7px,var(--tile-border) 7px 9px)}
+.phase{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:44px}
+.phase .info{flex:1}
+.phase-top{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
+.phase-top span:last-child{font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--key);border-radius:3px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink)}
+#ready{height:40px}
+.hintbtn{margin-top:7px;border:2px solid var(--present);background:transparent;color:var(--ink);border-radius:999px;font-weight:700;font-size:.75rem;padding:4px 10px;cursor:pointer}
+.hintbtn:disabled{opacity:.35;cursor:not-allowed}
+
+/* toast */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 70px);transform:translateX(-50%);z-index:20;
+  background:var(--ink);color:var(--bg);font-weight:700;padding:13px 16px;border-radius:4px;max-width:min(90vw,380px);text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+/* dialogs */
+dialog{border:none;border-radius:8px;background:var(--panel);color:var(--ink);padding:24px 24px 20px;width:min(92vw,480px);
+  box-shadow:0 4px 23px rgba(0,0,0,.2)}
+dialog::backdrop{background:var(--backdrop)}
+dialog h2{margin:0 0 6px;font-size:1.6rem;font-weight:800}
+dialog .close{position:absolute;top:12px;right:12px}
+.lede{font-size:1.15rem;margin:0 0 14px}
+dialog ul{padding-left:1.2em;margin:0 0 14px}
+dialog li{margin-bottom:6px}
+.example{display:flex;gap:4px;margin:14px 0 6px;--tile:40px}
+.example .tile{font-size:15px}
+.ex-note{margin:0 0 4px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .t{font-weight:700;font-size:1.05rem}
+.row .d{color:var(--muted);font-size:.85rem;margin-top:2px}
+.switch{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:999px;background:var(--muted);position:relative;cursor:pointer;flex:none;margin:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch:checked{background:var(--correct)}
+.switch:checked::after{transform:translateX(14px)}
+.switch:disabled{opacity:.4;cursor:not-allowed}
+.palettes{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pal{border:2px solid var(--line);background:transparent;border-radius:6px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.8rem;font-weight:700}
+.pal[aria-pressed="true"]{border-color:var(--ink)}
+.sw{display:flex;gap:3px}
+.sw i{width:16px;height:16px;display:block}
+
+button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){
+  .tile.flip,.tile.pop,.tile.shake,.tile.win,.play.playing::after{animation:none}
+  .toast,.switch::after{transition:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="icons">
+    <button class="icon" id="helpBtn" type="button" aria-label="How to play"><span class="qmark">?</span></button>
+  </div>
+  <h1>Daily Dots</h1>
+  <div class="icons right">
+    <button class="icon" id="settingsBtn" type="button" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="game">
+    <div class="board">
+      <div class="listen">
+        <button id="play" class="play" type="button" aria-label="Play the melody">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg>
+        </button>
+        <div>
+          <div class="keyname" id="keyname"></div>
+          <div class="pips" id="pips"></div>
+          <button class="hintbtn" id="hintBtn" type="button" hidden>Hint: +1 listen, −2 rows</button>
+        </div>
+      </div>
+      <p class="hint" id="hint" aria-live="polite"></p>
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="side">
+      <div class="phase">
+        <div class="info">
+          <div class="phase-top"><span id="phaseLabel"></span><span id="phaseTime"></span></div>
+          <div class="bar"><i id="bar"></i></div>
+        </div>
+        <button class="wkey" id="ready" type="button" hidden>Ready</button>
+      </div>
+      <div class="kbd" id="kbd"></div>
+      <div class="actions">
+        <button class="wkey" id="check" type="button">Enter</button>
+        <button class="wkey grow" id="hear" type="button">Hear my notes</button>
+        <button class="wkey" id="del" type="button" aria-label="Delete">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
+        </button>
+      </div>
+      <button class="wkey newgame" id="new" type="button">New melody</button>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<dialog id="helpDlg" aria-labelledby="helpTitle">
+  <button class="icon close" type="button" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+  <h2 id="helpTitle">How to play</h2>
+  <p class="lede">Hear the melody, then find it in five tries.</p>
+  <ul>
+    <li>Press play to hear the five-note melody. You get three listens, or one in Expert mode.</li>
+    <li>After listening you have 15 seconds to explore on the keyboard. Press Ready if you’re done early.</li>
+    <li>Then play your five notes into the row and press Enter. The tiles change colour to show how close you were.</li>
+    <li>Each new attempt starts with another 15 seconds to explore.</li>
+    <li>Octave matters: C4 and C5 are different notes.</li>
+    <li>Expert mode: 8 seconds to explore, and the keys are silent while you enter notes. One hint per game gives you another listen, but costs two rows.</li>
+  </ul>
+  <div class="example" aria-hidden="true">
+    <div class="tile correct">E♭<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
+  </div>
+  <p class="ex-note"><strong>E♭4</strong> is in the melody and in the right place.</p>
+  <div class="example" aria-hidden="true">
+    <div class="tile filled">B♭<span class="oct">3</span></div><div class="tile present">G<span class="oct">4</span></div><div class="tile filled">A♭<span class="oct">4</span></div><div class="tile filled">B♭<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">5</span></div>
+  </div>
+  <p class="ex-note"><strong>G4</strong> is in the melody but in a different place.</p>
+  <div class="example" aria-hidden="true">
+    <div class="tile filled">C<span class="oct">4</span></div><div class="tile filled">D<span class="oct">4</span></div><div class="tile absent">A♭<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
+  </div>
+  <p class="ex-note"><strong>A♭4</strong> isn’t in the melody.</p>
+</dialog>
+
+<dialog id="settingsDlg" aria-labelledby="setTitle">
+  <button class="icon close" type="button" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+  <h2 id="setTitle">Settings</h2>
+  <div class="row">
+    <div><div class="t">Expert mode</div><div class="d">One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.</div></div>
+    <input type="checkbox" class="switch" id="expert" role="switch" aria-label="Expert mode">
+  </div>
+  <div class="row">
+    <div><div class="t">Show the key</div><div class="d" id="keyDesc">Shows the key name above the grid.</div></div>
+    <input type="checkbox" class="switch" id="showKey" role="switch" aria-label="Show the key" checked>
+  </div>
+  <div class="row">
+    <div><div class="t">Play the key chord first</div><div class="d">Plays the tonic chord before the melody.</div></div>
+    <input type="checkbox" class="switch" id="chordOn" role="switch" aria-label="Play the key chord first" checked>
+  </div>
+  <div class="row" style="display:block">
+    <div class="t">Colours</div>
+    <div class="palettes" role="group" aria-label="Colours">
+      <button type="button" class="pal" data-palette="classic" aria-pressed="true"><span class="sw"><i style="background:#6AAA64"></i><i style="background:#C9B458"></i><i style="background:#787C7E"></i></span>Classic</button>
+      <button type="button" class="pal" data-palette="contrast" aria-pressed="false"><span class="sw"><i style="background:#F5793A"></i><i style="background:#85C0F9"></i><i style="background:#787C7E"></i></span>High contrast</button>
+      <button type="button" class="pal" data-palette="berry" aria-pressed="false"><span class="sw"><i style="background:#2BAE8E"></i><i style="background:#E05FA0"></i><i style="background:#787C7E"></i></span>Berry</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  const LOW = 55, HIGH = 79;            // G3 to G5
+  const MAJOR = [0,2,4,5,7,9,11], NAT = [0,2,4,5,7,9,11], LETTERS = 'CDEFGAB';
+  const ACC = {'-2':'𝄫','-1':'♭','0':'','1':'♯','2':'𝄪'};
+  const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+  const KEYS = [
+    {name:'C',letter:0,acc:0},{name:'D♭',letter:1,acc:-1},{name:'D',letter:1,acc:0},
+    {name:'E♭',letter:2,acc:-1},{name:'E',letter:2,acc:0},{name:'F',letter:3,acc:0},
+    {name:'F♯',letter:3,acc:1},{name:'G',letter:4,acc:0},{name:'A♭',letter:5,acc:-1},
+    {name:'A',letter:5,acc:0},{name:'B♭',letter:6,acc:-1},{name:'B',letter:6,acc:0}
+  ];
+  const WIN = ['First go. Show-off.','Two tries. Sharp ears.','Three tries. Solid.','Four tries. Got there.','Phew. Last row.'];
+  const ROWS = 5, LEN = 5, BEAT = 0.65;
+  let PLAYS = 3, EXPLORE_MS = 15000, isExpert = false;
+
+  const $ = id => document.getElementById(id);
+  const root = document.documentElement;
+  const hintBtn=$('hintBtn'), readyBtn=$('ready'), phaseLabel=$('phaseLabel'), phaseTime=$('phaseTime'), barEl=$('bar');
+  const playBtn=$('play'), grid=$('grid'), kbd=$('kbd'), hintEl=$('hint'), toastEl=$('toast'), pipsEl=$('pips'),
+        keyEl=$('keyname'), checkBtn=$('check'), delBtn=$('del'), hearBtn=$('hear'),
+        showKey=$('showKey'), chordOn=$('chordOn'), expert=$('expert');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let key, tonicPc, melody, guesses, current, plays, heard, over, busy, status, gameId = 0;
+  let phase = 'listen', exploreLeft = 0, lastTick = 0, timerId = null, hintUsed = false, maxRows = ROWS;
+  const tiles = [], keyEls = {};
+  const mod = (a,n) => ((a%n)+n)%n;
+  const isBlack = m => [1,3,6,8,10].includes(mod(m,12));
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  // ---------- spelling ----------
+  function spell(m){
+    const rel = mod(m - tonicPc, 12), d = MAJOR.indexOf(rel);
+    if (d >= 0){
+      const L = (key.letter + d) % 7, acc = mod(m - NAT[L] + 6, 12) - 6;
+      return {name: LETTERS[L] + ACC[acc], oct: Math.floor((m - acc - NAT[L]) / 12) - 1};
+    }
+    const flat = key.acc < 0 || key.name === 'F';
+    return {name: (flat ? FLAT : SHARP)[mod(m,12)], oct: Math.floor(m/12) - 1};
+  }
+  const label = m => { const s = spell(m); return s.name + s.oct; };
+
+  // ---------- melody generation ----------
+  function generate(){
+    const sc = [];
+    for (let m = LOW; m <= HIGH; m++) if (MAJOR.includes(mod(m - tonicPc, 12))) sc.push(m);
+    const deg = m => MAJOR.indexOf(mod(m - tonicPc, 12));
+    const moves = [[1,30],[-1,30],[2,10],[-2,10],[3,4],[-3,4],[4,2],[-4,2],[0,3]];
+    const total = moves.reduce((s,x) => s + x[1], 0);
+    const pick = () => { let r = Math.random()*total; for (const [v,w] of moves){ if ((r -= w) < 0) return v; } return 1; };
+    const starts = sc.map((m,i) => i).filter(i => [0,2,4].includes(deg(sc[i])) && sc[i] >= 58 && sc[i] <= 72);
+    for (let t = 0; t < 5000; t++){
+      let i = starts[Math.floor(Math.random()*starts.length)];
+      const mel = [sc[i]]; let ok = true;
+      for (let n = 1; n < LEN; n++){ i += pick(); if (i < 0 || i >= sc.length){ ok = false; break; } mel.push(sc[i]); }
+      if (!ok) continue;
+      const span = Math.max(...mel) - Math.min(...mel);
+      if (span > 12 || span < 3) continue;
+      if (![0,2,4].includes(deg(mel[LEN-1]))) continue;
+      let reps = 0; for (let n = 1; n < LEN; n++) if (mel[n] === mel[n-1]) reps++;
+      if (reps > 1) continue;
+      return mel;
+    }
+    const s = starts[0]; return [sc[s], sc[s+1], sc[s+2], sc[s+1], sc[s]];
+  }
+
+  // ---------- audio ----------
+  let ctx, master;
+  function audio(){
+    if (!ctx){
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = 0.5;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800;
+      master.connect(lp); lp.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(m, t, dur, vol){
+    vol = vol || 0.32;
+    const f = 440 * Math.pow(2, (m - 69) / 12), g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(vol * 0.35, t + 0.25);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    g.connect(master);
+    [[1,'triangle',1],[2,'sine',0.22],[3,'sine',0.07]].forEach(([h,type,a]) => {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = type; o.frequency.value = f*h; og.gain.value = a;
+      o.connect(og); og.connect(g); o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  function chord(t){
+    const r = LOW + mod(tonicPc - mod(LOW,12), 12);
+    [r - 12, r, r + 4, r + 7].forEach(m => tone(m, t, 1.2, 0.16));
+  }
+  function playSeq(notes, withChord, done){
+    audio(); busy = true; renderControls();
+    const id = gameId;
+    let t = ctx.currentTime + 0.05;
+    if (withChord){ chord(t); t += 1.4; }
+    notes.forEach((m,i) => tone(m, t + i*BEAT, 0.8));
+    const ms = (t - ctx.currentTime + notes.length*BEAT + 0.3) * 1000;
+    setTimeout(() => { if (id !== gameId) return; busy = false; renderControls(); if (done) done(); }, ms);
+  }
+
+  // ---------- messages ----------
+  let toastTimer;
+  function toast(t, persist){
+    toastEl.textContent = t; toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    if (!persist) toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  }
+  function clearToast(){ clearTimeout(toastTimer); toastEl.classList.remove('show'); }
+  const hint = t => { hintEl.textContent = t; };
+
+  // ---------- rendering ----------
+  function buildGrid(){
+    grid.innerHTML = '';
+    for (let r = 0; r < ROWS; r++){
+      tiles[r] = [];
+      for (let c = 0; c < LEN; c++){
+        const el = document.createElement('div'); el.className = 'tile';
+        grid.appendChild(el); tiles[r][c] = el;
+      }
+    }
+  }
+  function setTile(el, m){
+    if (m == null){ el.innerHTML = ''; el.classList.remove('filled'); el.removeAttribute('aria-label'); return; }
+    const s = spell(m);
+    el.innerHTML = s.name + '<span class="oct">' + s.oct + '</span>';
+    el.classList.add('filled'); el.setAttribute('aria-label', s.name + s.oct);
+  }
+  function animate(el, cls){
+    if (reduce) return;
+    el.classList.remove('pop','flip','shake','win'); void el.offsetWidth; el.classList.add(cls);
+  }
+  function renderRow(popIndex){
+    const r = guesses.length; if (r >= ROWS) return;
+    for (let c = 0; c < LEN; c++) setTile(tiles[r][c], current[c]);
+    if (popIndex != null) animate(tiles[r][popIndex], 'pop');
+  }
+  function buildKeyboard(){
+    kbd.innerHTML = '';
+    const whites = []; for (let m = LOW; m <= HIGH; m++) if (!isBlack(m)) whites.push(m);
+    const gap = 3, n = whites.length;
+    for (let m = LOW; m <= HIGH; m++){
+      const b = document.createElement('button'); b.type = 'button';
+      if (isBlack(m)){
+        b.className = 'black';
+        const i = whites.indexOf(m-1) + 1;   // boundary index between white keys
+        b.style.width = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * 0.66 + 4px)';
+        b.style.left = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * ' + i + ' + ' + (gap*i - gap/2) + 'px)';
+        b.style.transform = 'translateX(-50%)';
+      } else {
+        b.className = 'white';
+        if (mod(m,12) === 0) b.textContent = 'C' + (Math.floor(m/12) - 1);
+      }
+      b.addEventListener('pointerdown', e => { e.preventDefault(); press(m); });
+      b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); press(m); } });
+      kbd.appendChild(b); keyEls[m] = b;
+    }
+  }
+  function renderKeys(){
+    for (let m = LOW; m <= HIGH; m++){
+      const el = keyEls[m];
+      el.classList.remove('correct','present','absent');
+      if (status[m]) el.classList.add(status[m]);
+      el.setAttribute('aria-label', label(m) + (status[m] ? ', ' + {correct:'correct',present:'in the melody',absent:'not in the melody'}[status[m]] : ''));
+    }
+  }
+  function renderControls(){
+    pipsEl.innerHTML = '';
+    for (let i = 0; i < PLAYS; i++){
+      const s = document.createElement('span'); if (i >= plays) s.className = 'used'; pipsEl.appendChild(s);
+    }
+    const sm = document.createElement('small');
+    sm.textContent = over ? 'Listen as often as you like' : (plays === 1 ? '1 listen left' : plays + ' listens left');
+    pipsEl.appendChild(sm);
+    playBtn.disabled = busy || (!over && plays === 0);
+    playBtn.classList.toggle('playing', busy);
+    checkBtn.disabled = busy || over;
+    checkBtn.classList.toggle('ready', !busy && !over && current.length === LEN);
+    delBtn.disabled = busy || over || current.length === 0;
+    hearBtn.disabled = busy || current.length === 0;
+    keyEl.textContent = showKey.checked ? key.name + ' major' : 'Key hidden';
+    checkBtn.disabled = busy || phase !== 'enter';
+    delBtn.disabled = busy || phase !== 'enter' || current.length === 0;
+    checkBtn.classList.toggle('ready', !busy && phase === 'enter' && current.length === LEN);
+    hearBtn.hidden = isExpert && !over;
+    hintBtn.hidden = !isExpert;
+    hintBtn.disabled = !canHint();
+    renderPhase();
+  }
+  function renderPhase(){
+    let lab = '', time = '', w = 0;
+    readyBtn.hidden = phase !== 'explore';
+    readyBtn.disabled = busy;
+    if (phase === 'listen') lab = busy ? 'Listening' : 'Press play to listen';
+    else if (phase === 'explore'){
+      if (busy){ lab = 'Listening'; w = 100; }
+      else { lab = 'Explore the keyboard'; time = Math.ceil(exploreLeft / 1000) + 's'; w = Math.max(0, exploreLeft / EXPLORE_MS * 100); }
+    }
+    else if (phase === 'enter') lab = isExpert ? 'Enter your notes (keys are silent)' : 'Enter your five notes';
+    else if (phase === 'check') lab = 'Checking';
+    else if (phase === 'over') lab = 'Free play';
+    phaseLabel.textContent = lab; phaseTime.textContent = time; barEl.style.width = w + '%';
+  }
+
+  // ---------- phases ----------
+  function startExplore(){
+    phase = 'explore'; exploreLeft = EXPLORE_MS; lastTick = performance.now();
+    clearInterval(timerId); timerId = setInterval(tick, 100);
+    renderControls();
+  }
+  function tick(){
+    const now = performance.now(), dt = now - lastTick; lastTick = now;
+    if (phase !== 'explore'){ clearInterval(timerId); return; }
+    if (busy) return;                       // timer pauses while the melody plays
+    exploreLeft -= dt;
+    if (exploreLeft <= 0) startEnter(); else renderPhase();
+  }
+  function startEnter(){
+    clearInterval(timerId);
+    phase = 'enter';
+    hint(isExpert ? 'Click your five notes into the row, then press Enter.' : 'Play your five notes into the row, then press Enter.');
+    renderControls();
+  }
+  function canHint(){
+    return isExpert && !hintUsed && !over && heard && !busy && phase !== 'check' && (maxRows - guesses.length) >= 3;
+  }
+  function useHint(){
+    if (!canHint()) return;
+    hintUsed = true; maxRows = ROWS - 2;
+    for (let r = maxRows; r < ROWS; r++) tiles[r].forEach(el => { el.classList.add('lost'); el.setAttribute('aria-label', 'Row lost to the hint'); });
+    toast('Hint used: one more listen, two rows gone');
+    playSeq(melody, chordOn.checked, () => { if (phase === 'explore') startExplore(); });
+  }
+
+  // ---------- game logic ----------
+  function evaluate(g){
+    const res = Array(LEN).fill('absent'), left = {};
+    for (let i = 0; i < LEN; i++){
+      if (g[i] === melody[i]) res[i] = 'correct';
+      else left[melody[i]] = (left[melody[i]] || 0) + 1;
+    }
+    for (let i = 0; i < LEN; i++){
+      if (res[i] !== 'correct' && left[g[i]] > 0){ res[i] = 'present'; left[g[i]]--; }
+    }
+    return res;
+  }
+  function press(m){
+    const el = keyEls[m]; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 140);
+    if (busy) return;
+    if (phase === 'listen'){ toast('Play the melody first'); return; }
+    if (phase === 'check') return;
+    if (!(phase === 'enter' && isExpert)){ audio(); tone(m, ctx.currentTime, 0.9); }
+    if (phase !== 'enter') return;
+    if (current.length >= LEN){ toast('Row full'); return; }
+    current.push(m); renderRow(current.length - 1);
+    if (current.length === LEN) hint('Press Enter to check your melody.');
+    renderControls();
+  }
+  function del(){
+    if (busy || phase !== 'enter' || !current.length) return;
+    current.pop(); renderRow(); renderControls();
+  }
+  function check(){
+    if (busy || phase !== 'enter') return;
+    if (current.length < LEN){
+      toast('Not enough notes');
+      const r = guesses.length; if (r < ROWS) tiles[r].forEach(el => animate(el, 'shake'));
+      return;
+    }
+    const g = current.slice(), res = evaluate(g), row = guesses.length, id = gameId;
+    guesses.push(g); current = [];
+    phase = 'check'; hint('');
+    busy = true; renderControls(); audio();
+    const step = BEAT * 1000;               // flips and notes at the melody's tempo
+    res.forEach((r, i) => {
+      setTimeout(() => {
+        if (id !== gameId) return;
+        const el = tiles[row][i];
+        tone(g[i], ctx.currentTime, 0.8, 0.26);
+        animate(el, 'flip');
+        setTimeout(() => {
+          if (id !== gameId) return;
+          el.classList.add(r);
+          el.setAttribute('aria-label', label(g[i]) + ', ' + {correct:'correct',present:'in the melody, wrong place',absent:'not in the melody'}[r]);
+        }, reduce ? 0 : 300);
+      }, i * step);
+    });
+    setTimeout(() => { if (id === gameId) finish(g, res, row); }, (LEN - 1) * step + (reduce ? 200 : 700));
+  }
+  function finish(g, res, row){
+    const rank = {absent:1, present:2, correct:3};
+    g.forEach((m, i) => { if (!status[m] || rank[res[i]] > rank[status[m]]) status[m] = res[i]; });
+    renderKeys();
+    busy = false;
+    if (res.every(r => r === 'correct')){
+      over = true; phase = 'over';
+      tiles[row].forEach((el, i) => setTimeout(() => animate(el, 'win'), i * 100));
+      toast(WIN[row], true);
+      hint('Press New melody for another.');
+    } else if (guesses.length === maxRows){
+      over = true; phase = 'over';
+      toast(melody.map(label).join('  '), true);
+      hint('That was the melody. Press play to hear it again.');
+    } else {
+      hint('Attempt ' + (guesses.length + 1) + '. Explore, then enter your notes.' + (plays === 0 ? ' No listens left.' : ''));
+      startExplore();
+      return;
+    }
+    renderControls();
+  }
+  function listen(){
+    if (busy) return;
+    if (over){ playSeq(melody, chordOn.checked); return; }
+    if (plays <= 0 || phase === 'check') return;
+    plays--; heard = true;
+    if (phase === 'listen') hint('');
+    playSeq(melody, chordOn.checked, () => {
+      if (phase === 'listen'){ hint('Explore the keyboard. Nothing goes in the tiles yet.'); startExplore(); }
+      else if (phase === 'explore') startExplore();   // a fresh explore window after each listen
+    });
+  }
+  function hear(){ if (!busy && current.length && !(isExpert && !over)) playSeq(current.slice(), false); }
+  function newGame(){
+    gameId++;
+    key = KEYS[Math.floor(Math.random() * KEYS.length)];
+    tonicPc = mod(NAT[key.letter] + key.acc, 12);
+    melody = generate();
+    guesses = []; current = []; plays = PLAYS; heard = false; over = false; busy = false; status = {};
+    clearInterval(timerId); phase = 'listen'; hintUsed = false; maxRows = ROWS;
+    clearToast(); buildGrid(); renderKeys(); renderControls();
+    hint(PLAYS === 1 ? 'Press play to hear the melody. One listen, so make it count.' : 'Press play to hear the melody. You get three listens.');
+  }
+
+  // ---------- settings ----------
+  function applyExpert(on, fresh){
+    PLAYS = on ? 1 : 3;
+    EXPLORE_MS = on ? 8000 : 15000;
+    isExpert = on;
+    expert.checked = on;
+    if (on){ showKey.checked = false; chordOn.checked = true; }
+    else { showKey.checked = true; }
+    showKey.disabled = chordOn.disabled = on;
+    $('keyDesc').textContent = on ? 'Locked off in Expert mode.' : 'Shows the key name above the grid.';
+    store.set('dd-expert', on ? '1' : '0');
+    if (fresh) newGame();
+  }
+  function applyPalette(p){
+    root.dataset.palette = p;
+    document.querySelectorAll('.pal').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.palette === p)));
+    store.set('dd-palette', p);
+  }
+
+  // ---------- wiring ----------
+  playBtn.addEventListener('click', listen);
+  checkBtn.addEventListener('click', check);
+  delBtn.addEventListener('click', del);
+  hearBtn.addEventListener('click', hear);
+  $('new').addEventListener('click', newGame);
+  showKey.addEventListener('change', renderControls);
+  expert.addEventListener('change', () => applyExpert(expert.checked, true));
+  document.querySelectorAll('.pal').forEach(b => b.addEventListener('click', () => applyPalette(b.dataset.palette)));
+  readyBtn.addEventListener('click', () => { if (phase === 'explore' && !busy) startEnter(); });
+  hintBtn.addEventListener('click', useHint);
+  $('helpBtn').addEventListener('click', () => $('helpDlg').showModal());
+  $('settingsBtn').addEventListener('click', () => $('settingsDlg').showModal());
+  document.querySelectorAll('dialog').forEach(d => {
+    d.querySelector('[data-close]').addEventListener('click', () => d.close());
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  });
+  document.addEventListener('keydown', e => {
+    if (document.querySelector('dialog[open]')) return;
+    if (e.target.closest('input')) return;
+    if (e.key === 'Backspace'){ e.preventDefault(); del(); }
+    else if (e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); check(); }
+  });
+
+  const savedPal = store.get('dd-palette');
+  applyPalette(['classic','contrast','berry'].includes(savedPal) ? savedPal : 'classic');
+  buildKeyboard();
+  key = KEYS[0]; tonicPc = 0;
+  applyExpert(store.get('dd-expert') === '1', false);
+  newGame();
+  if (!store.get('dd-seen-help')){ store.set('dd-seen-help','1'); $('helpDlg').showModal(); }
+})();
+</script>
+</body>
+</html>
