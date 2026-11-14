@@ -1,18 +1,21 @@
 <!DOCTYPE html>
-<html lang="en-GB" data-palette="classic">
+<html lang="en-GB" data-palette="classic" data-inst="piano">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Daily Dots</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&family=Righteous&family=Alfa+Slab+One&family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{
+  --font:"Libre Franklin","Helvetica Neue",Arial,sans-serif;
+  --title-font:var(--font); --title-size:1.9rem;
   --bg:#FFFFFF; --ink:#1A1A1B; --muted:#787C7E; --line:#D3D6DA;
   --tile-border:#D3D6DA; --tile-filled:#878A8C;
-  --key:#D3D6DA; --key-ink:#1A1A1B; --black-key:#1A1A1B;
+  --key:#D3D6DA; --key-ink:#1A1A1B; --black-key:#1A1A1B; --key-edge:transparent; --black-edge:var(--bg);
   --absent:#787C7E; --on:#FFFFFF; --panel:#FFFFFF; --backdrop:rgba(255,255,255,.55);
+  --header-bg:transparent; --header-ink:var(--ink);
   --correct:#6AAA64; --present:#C9B458;
   color-scheme: light;
   box-sizing:border-box;
@@ -21,7 +24,6 @@
 }
 :root[data-palette="contrast"]{--correct:#F5793A; --present:#85C0F9}
 :root[data-palette="berry"]{--correct:#2BAE8E; --present:#E05FA0}
-
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#121213; --ink:#F8F8F8; --muted:#818384; --line:#3A3A3C;
@@ -45,23 +47,53 @@
 :root[data-theme="dark"][data-palette="contrast"]{--correct:#F5793A; --present:#85C0F9}
 :root[data-theme="dark"][data-palette="berry"]{--correct:#1F8F74; --present:#C24A86}
 
+/* instrument themes (fixed looks, after the light/dark rules so they win) */
+:root[data-inst="rhodes"]{
+  --bg:#2A1C13; --ink:#F4E7D4; --muted:#BFA68B; --line:#4D3828;
+  --tile-border:#4D3828; --tile-filled:#9C7A5A;
+  --key:#E8D9C2; --key-ink:#2A1C13; --black-key:#140D08; --black-edge:#2A1C13;
+  --absent:#5C4636; --panel:#36261B; --backdrop:rgba(0,0,0,.6);
+  --header-bg:#C8642C; --header-ink:#2A1C13;
+  --title-font:"Righteous",var(--font); --title-size:2rem;
+  color-scheme: dark;
+}
+:root[data-inst="organ"]{
+  --bg:#F2E6D0; --ink:#2B1A0F; --muted:#7A6450; --line:#D6C2A2;
+  --tile-border:#D2BC98; --tile-filled:#8C6E50;
+  --key:#FFFCF3; --key-ink:#2B1A0F; --black-key:#1E130B; --key-edge:#C9B08A; --black-edge:#F2E6D0;
+  --absent:#8C7B6B; --panel:#FBF4E6; --backdrop:rgba(43,26,15,.35);
+  --header-bg:#5B341D; --header-ink:#F2E6D0;
+  --title-font:"Alfa Slab One",Georgia,serif; --title-size:1.8rem;
+  color-scheme: light;
+}
+:root[data-inst="harpsichord"]{
+  --bg:#F3ECDD; --ink:#2E1F1A; --muted:#7D6A5C; --line:#D9C9A8;
+  --tile-border:#CDB98F; --tile-filled:#8A6A3A;
+  --key:#2E1F1A; --key-ink:#E9DCC0; --black-key:#FAF5EA; --black-edge:#2E1F1A;
+  --absent:#9A8C80; --panel:#FAF5EA; --backdrop:rgba(46,31,26,.35);
+  --header-bg:#6E1F2B; --header-ink:#F3E2B8;
+  --title-font:"Cormorant Garamond",Georgia,serif; --title-size:2.4rem;
+  color-scheme: light;
+}
+
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif;line-height:1.4}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.4;transition:background .3s,color .3s}
 button{font:inherit;color:inherit}
 [hidden]{display:none !important}
 
 /* header */
-.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 12px;border-bottom:1px solid var(--line)}
-.top h1{margin:0;font-size:1.9rem;font-weight:800;letter-spacing:.01em;text-align:center}
-.icons{display:flex;gap:4px}
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--header-bg);color:var(--header-ink)}
+.top h1{margin:0;font-family:var(--title-font);font-size:var(--title-size);font-weight:800;letter-spacing:.01em;text-align:center;line-height:1}
+.icons{display:flex;gap:2px}
 .icons.right{justify-content:flex-end}
 .icon{width:40px;height:40px;border:none;background:transparent;display:grid;place-items:center;cursor:pointer;border-radius:50%}
 .icon svg{width:26px;height:26px}
 .qmark{width:24px;height:24px;border:2.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem}
 
-main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
+main{max-width:900px;margin:0 auto;padding:16px 12px 40px}
+.modebar{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:18px}
+.daylabel{font-size:.8rem;color:var(--muted);font-weight:600}
 .game{display:grid;grid-template-columns:auto minmax(300px,440px);gap:44px;align-items:start;justify-content:center}
 @media (max-width:800px){.game{grid-template-columns:1fr;gap:26px;justify-items:center}.side{width:100%;max-width:460px}}
 
@@ -77,7 +109,7 @@ main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
 .pips span{width:11px;height:11px;border-radius:50%;background:var(--ink);border:2px solid var(--ink)}
 .pips span.used{background:transparent;opacity:.4}
 .pips small{color:var(--muted);margin-left:4px;font-size:.8rem;font-weight:600}
-.hint{text-align:center;color:var(--muted);font-weight:600;font-size:.9rem;min-height:2.6em;margin:4px 0 10px;max-width:330px;margin-left:auto;margin-right:auto}
+.hint{text-align:center;color:var(--muted);font-weight:600;font-size:.9rem;min-height:2.6em;margin:4px auto 10px;max-width:330px}
 
 /* grid */
 .grid{--tile:min(62px, calc((100vw - 48px) / 5));display:grid;grid-template-columns:repeat(5,var(--tile));gap:5px;justify-content:center;perspective:700px}
@@ -89,6 +121,7 @@ main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
 .tile.correct{background:var(--correct);border-color:var(--correct)}
 .tile.present{background:var(--present);border-color:var(--present)}
 .tile.absent{background:var(--absent);border-color:var(--absent)}
+.tile.lost{border-color:var(--tile-border);background:repeating-linear-gradient(135deg,transparent 0 7px,var(--tile-border) 7px 9px)}
 .tile.pop{animation:pop .1s ease-in}
 .tile.flip{animation:flip .6s ease-in-out}
 .tile.shake{animation:shake .5s}
@@ -98,36 +131,40 @@ main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
 @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
 @keyframes bounce{0%,20%{transform:translateY(0)}40%{transform:translateY(-26px)}50%{transform:translateY(5px)}60%{transform:translateY(-13px)}80%{transform:translateY(2px)}100%{transform:translateY(0)}}
 
+/* segmented control */
+.seg{display:inline-flex;background:var(--key);border-radius:6px;padding:3px;box-shadow:inset 0 0 0 1px var(--key-edge)}
+.seg button{border:none;background:transparent;font-weight:700;font-size:.9rem;padding:6px 16px;border-radius:4px;cursor:pointer;color:var(--key-ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* phase strip */
+.phase{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:44px}
+.phase .info{flex:1}
+.phase-top{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
+.phase-top span:last-child{font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink)}
+#ready{height:40px}
+
 /* keyboard */
-.seg{display:inline-flex;background:var(--key);border-radius:6px;padding:3px;margin-bottom:12px}
-.seg button{border:none;background:transparent;font-weight:700;font-size:.85rem;padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--key-ink)}
-.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
 .kbd{position:relative;display:flex;gap:3px;height:150px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.white{flex:1;border:none;background:var(--key);color:var(--key-ink);border-radius:0 0 4px 4px;cursor:pointer;
+.white{flex:1;border:none;background:var(--key);color:var(--key-ink);border-radius:0 0 4px 4px;cursor:pointer;box-shadow:inset 0 0 0 1px var(--key-edge);
   display:flex;align-items:flex-end;justify-content:center;padding:0 0 6px;font-size:.65rem;font-weight:700}
-.black{position:absolute;top:0;height:60%;background:var(--black-key);border:2px solid var(--bg);border-top:none;border-radius:0 0 4px 4px;z-index:2;cursor:pointer;padding:0}
+.black{position:absolute;top:0;height:60%;background:var(--black-key);border:2px solid var(--black-edge);border-top:none;border-radius:0 0 4px 4px;z-index:2;cursor:pointer;padding:0}
 .white.correct,.black.correct{background:var(--correct);color:var(--on)}
 .white.present,.black.present{background:var(--present);color:var(--on)}
 .white.absent,.black.absent{background:var(--absent);color:var(--on)}
 .white.down,.black.down{filter:brightness(.85)}
 
 .actions{display:flex;gap:6px;margin-top:10px}
-.wkey{height:58px;border:none;border-radius:4px;background:var(--key);color:var(--key-ink);font-weight:700;font-size:.8rem;
+.wkey{height:58px;border:none;border-radius:4px;background:var(--key);color:var(--key-ink);font-weight:700;font-size:.8rem;box-shadow:inset 0 0 0 1px var(--key-edge);
   letter-spacing:.02em;cursor:pointer;display:grid;place-items:center;padding:0 12px;text-transform:uppercase}
 .wkey.grow{flex:1}
 .actions:has(#hear[hidden]) #check{flex:1}
 .wkey svg{width:24px;height:24px}
 .wkey:disabled{opacity:.45;cursor:not-allowed}
 .wkey.ready{background:var(--ink);color:var(--bg)}
-.newgame{margin-top:10px;width:100%;height:40px;background:transparent;border:2px solid var(--key)}
-.tile.lost{border-color:var(--tile-border);background:repeating-linear-gradient(135deg,transparent 0 7px,var(--tile-border) 7px 9px)}
-.phase{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:44px}
-.phase .info{flex:1}
-.phase-top{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
-.phase-top span:last-child{font-variant-numeric:tabular-nums}
-.bar{height:6px;background:var(--key);border-radius:3px;margin-top:6px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--ink)}
-#ready{height:40px}
+.newgame{margin-top:10px;width:100%;height:40px;background:transparent;box-shadow:inset 0 0 0 2px var(--line);color:var(--ink)}
+.wkey.share{background:var(--correct);color:var(--on);box-shadow:none}
 .hintbtn{margin-top:7px;border:2px solid var(--present);background:transparent;color:var(--ink);border-radius:999px;font-weight:700;font-size:.75rem;padding:4px 10px;cursor:pointer}
 .hintbtn:disabled{opacity:.35;cursor:not-allowed}
 
@@ -138,10 +175,11 @@ main{max-width:900px;margin:0 auto;padding:24px 12px 40px}
 .toast.show{opacity:1}
 
 /* dialogs */
-dialog{border:none;border-radius:8px;background:var(--panel);color:var(--ink);padding:24px 24px 20px;width:min(92vw,480px);
+dialog{border:none;border-radius:8px;background:var(--panel);color:var(--ink);padding:24px 24px 20px;width:min(92vw,480px);max-height:88vh;overflow:auto;
   box-shadow:0 4px 23px rgba(0,0,0,.2)}
 dialog::backdrop{background:var(--backdrop)}
 dialog h2{margin:0 0 6px;font-size:1.6rem;font-weight:800}
+dialog h3{margin:20px 0 8px;font-size:1rem;font-weight:700}
 dialog .close{position:absolute;top:12px;right:12px}
 .lede{font-size:1.15rem;margin:0 0 14px}
 dialog ul{padding-left:1.2em;margin:0 0 14px}
@@ -158,16 +196,29 @@ dialog li{margin-bottom:6px}
 .switch:checked{background:var(--correct)}
 .switch:checked::after{transform:translateX(14px)}
 .switch:disabled{opacity:.4;cursor:not-allowed}
-.palettes{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pal{border:2px solid var(--line);background:transparent;border-radius:6px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.8rem;font-weight:700}
 .pal[aria-pressed="true"]{border-color:var(--ink)}
 .sw{display:flex;gap:3px}
-.sw i{width:16px;height:16px;display:block}
+.sw i{width:16px;height:16px;display:block;border:1px solid rgba(0,0,0,.15)}
+
+/* stats */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.nums.three{grid-template-columns:repeat(3,1fr)}
+.nums b{display:block;font-size:1.8rem;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.nums span{font-size:.75rem;color:var(--muted)}
+.dist div{display:flex;align-items:center;gap:6px;margin:4px 0;font-weight:700;font-size:.85rem}
+.dist i{display:block;background:var(--absent);color:var(--on);font-style:normal;text-align:right;padding:2px 6px;min-width:24px}
+.dist i.hl{background:var(--correct)}
+.statsfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.statsfoot .next{font-weight:700}
+.statsfoot .next small{display:block;color:var(--muted);font-weight:600}
+.statsfoot .wkey{height:46px;padding:0 20px}
 
 button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){
   .tile.flip,.tile.pop,.tile.shake,.tile.win,.play.playing::after{animation:none}
-  .toast,.switch::after{transition:none}
+  .toast,.switch::after,body{transition:none}
 }
 </style>
 </head>
@@ -178,6 +229,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   </div>
   <h1>Daily Dots</h1>
   <div class="icons right">
+    <button class="icon" id="statsBtn" type="button" aria-label="Statistics">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+    </button>
     <button class="icon" id="settingsBtn" type="button" aria-label="Settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
     </button>
@@ -185,6 +239,13 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
 </header>
 
 <main>
+  <div class="modebar">
+    <div class="seg" role="group" aria-label="Game mode">
+      <button type="button" data-mode="daily" aria-pressed="true">Daily</button>
+      <button type="button" data-mode="practice" aria-pressed="false">Practice</button>
+    </div>
+    <div class="daylabel" id="daylabel"></div>
+  </div>
   <section class="game">
     <div class="board">
       <div class="listen">
@@ -217,6 +278,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
         </button>
       </div>
+      <button class="wkey share newgame" id="shareBtn" type="button" hidden>Share my result</button>
       <button class="wkey newgame" id="new" type="button">New melody</button>
     </div>
   </section>
@@ -234,9 +296,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <li>Press play to hear the five-note melody. You get three listens, or one in Expert mode.</li>
     <li>After listening you have 15 seconds to explore on the keyboard. Press Ready if you’re done early.</li>
     <li>Then play your five notes into the row and press Enter. The tiles change colour to show how close you were.</li>
-    <li>Each new attempt starts with another 15 seconds to explore.</li>
     <li>Octave matters: C4 and C5 are different notes.</li>
-    <li>Expert mode: 8 seconds to explore, and the keys are silent while you enter notes. One hint per game gives you another listen, but costs two rows.</li>
+    <li>Daily is the same melody for everyone, once a day. Practice is as many melodies as you like.</li>
+    <li>Scoring: 500 points for solving on row 1, down to 100 on row 5, plus 50 for each listen you didn’t use. Expert doubles your score.</li>
+    <li>Expert mode: 8 seconds to explore, and the keys are silent while you enter notes. One hint per game gives you another listen, but costs two rows and 100 points.</li>
   </ul>
   <div class="example" aria-hidden="true">
     <div class="tile correct">E♭<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
@@ -252,13 +315,45 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   <p class="ex-note"><strong>A♭4</strong> isn’t in the melody.</p>
 </dialog>
 
+<dialog id="statsDlg" aria-labelledby="statsTitle">
+  <button class="icon close" type="button" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+  <h2 id="statsTitle">Statistics</h2>
+  <h3>Daily melody</h3>
+  <div class="nums">
+    <div><b id="sPlayed">0</b><span>Played</span></div>
+    <div><b id="sWin">0</b><span>Win %</span></div>
+    <div><b id="sCur">0</b><span>Current streak</span></div>
+    <div><b id="sMax">0</b><span>Longest streak</span></div>
+  </div>
+  <h3>Solved on row</h3>
+  <div class="dist" id="dist"></div>
+  <h3>Best scores</h3>
+  <div class="nums three">
+    <div><b id="bToday">0</b><span>Today</span></div>
+    <div><b id="bWeek">0</b><span>This week</span></div>
+    <div><b id="bAll">0</b><span>All time</span></div>
+  </div>
+  <h3>Practice</h3>
+  <div class="nums three">
+    <div><b id="pPlayed">0</b><span>Played</span></div>
+    <div><b id="pCur">0</b><span>Win streak</span></div>
+    <div><b id="pMax">0</b><span>Longest win streak</span></div>
+  </div>
+  <div class="statsfoot" id="statsFoot" hidden>
+    <div class="next">Next daily melody<small id="nextIn"></small></div>
+    <button class="wkey share" id="statsShare" type="button">Share</button>
+  </div>
+</dialog>
+
 <dialog id="settingsDlg" aria-labelledby="setTitle">
   <button class="icon close" type="button" data-close aria-label="Close">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
   </button>
   <h2 id="setTitle">Settings</h2>
   <div class="row">
-    <div><div class="t">Expert mode</div><div class="d">One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.</div></div>
+    <div><div class="t">Expert mode</div><div class="d" id="expertDesc">One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.</div></div>
     <input type="checkbox" class="switch" id="expert" role="switch" aria-label="Expert mode">
   </div>
   <div class="row">
@@ -270,11 +365,21 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <input type="checkbox" class="switch" id="chordOn" role="switch" aria-label="Play the key chord first" checked>
   </div>
   <div class="row" style="display:block">
+    <div class="t">Sound</div>
+    <div class="d">Each instrument brings its own look.</div>
+    <div class="choices" role="group" aria-label="Sound">
+      <button type="button" class="pal inst" data-inst="piano" aria-pressed="true"><span class="sw"><i style="background:#FFFFFF"></i><i style="background:#D3D6DA"></i><i style="background:#1A1A1B"></i></span>Grand piano</button>
+      <button type="button" class="pal inst" data-inst="rhodes" aria-pressed="false"><span class="sw"><i style="background:#2A1C13"></i><i style="background:#C8642C"></i><i style="background:#E8D9C2"></i></span>Rhodes</button>
+      <button type="button" class="pal inst" data-inst="organ" aria-pressed="false"><span class="sw"><i style="background:#F2E6D0"></i><i style="background:#5B341D"></i><i style="background:#1E130B"></i></span>Hammond organ</button>
+      <button type="button" class="pal inst" data-inst="harpsichord" aria-pressed="false"><span class="sw"><i style="background:#F3ECDD"></i><i style="background:#6E1F2B"></i><i style="background:#2E1F1A"></i></span>Harpsichord</button>
+    </div>
+  </div>
+  <div class="row" style="display:block">
     <div class="t">Colours</div>
-    <div class="palettes" role="group" aria-label="Colours">
-      <button type="button" class="pal" data-palette="classic" aria-pressed="true"><span class="sw"><i style="background:#6AAA64"></i><i style="background:#C9B458"></i><i style="background:#787C7E"></i></span>Classic</button>
-      <button type="button" class="pal" data-palette="contrast" aria-pressed="false"><span class="sw"><i style="background:#F5793A"></i><i style="background:#85C0F9"></i><i style="background:#787C7E"></i></span>High contrast</button>
-      <button type="button" class="pal" data-palette="berry" aria-pressed="false"><span class="sw"><i style="background:#2BAE8E"></i><i style="background:#E05FA0"></i><i style="background:#787C7E"></i></span>Berry</button>
+    <div class="choices" role="group" aria-label="Colours">
+      <button type="button" class="pal palette" data-palette="classic" aria-pressed="true"><span class="sw"><i style="background:#6AAA64"></i><i style="background:#C9B458"></i><i style="background:#787C7E"></i></span>Classic</button>
+      <button type="button" class="pal palette" data-palette="contrast" aria-pressed="false"><span class="sw"><i style="background:#F5793A"></i><i style="background:#85C0F9"></i><i style="background:#787C7E"></i></span>High contrast</button>
+      <button type="button" class="pal palette" data-palette="berry" aria-pressed="false"><span class="sw"><i style="background:#2BAE8E"></i><i style="background:#E05FA0"></i><i style="background:#787C7E"></i></span>Berry</button>
     </div>
   </div>
 </dialog>
@@ -294,25 +399,44 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   ];
   const WIN = ['First go. Show-off.','Two tries. Sharp ears.','Three tries. Solid.','Four tries. Got there.','Phew. Last row.'];
   const ROWS = 5, LEN = 5, BEAT = 0.65;
-  let PLAYS = 3, EXPLORE_MS = 15000, isExpert = false;
+  const ROW_PTS = [500,400,300,200,100], LISTEN_BONUS = 50, HINT_COST = 100;
+  let PLAYS = 3, EXPLORE_MS = 15000;
+  let isExpert = false, expertPref = false, showKeyPref = true, chordPref = true, mode = 'daily', inst = 'piano';
 
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
   const hintBtn=$('hintBtn'), readyBtn=$('ready'), phaseLabel=$('phaseLabel'), phaseTime=$('phaseTime'), barEl=$('bar');
   const playBtn=$('play'), grid=$('grid'), kbd=$('kbd'), hintEl=$('hint'), toastEl=$('toast'), pipsEl=$('pips'),
-        keyEl=$('keyname'), checkBtn=$('check'), delBtn=$('del'), hearBtn=$('hear'),
+        keyEl=$('keyname'), checkBtn=$('check'), delBtn=$('del'), hearBtn=$('hear'), newBtn=$('new'), shareBtn=$('shareBtn'),
         showKey=$('showKey'), chordOn=$('chordOn'), expert=$('expert');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let key, tonicPc, melody, guesses, current, plays, heard, over, busy, status, gameId = 0;
-  let phase = 'listen', exploreLeft = 0, lastTick = 0, timerId = null, hintUsed = false, maxRows = ROWS;
+  let key, tonicPc, melody, guesses, current, plays, heard, over, busy, status, won = false, score = 0, gameId = 0;
+  let phase = 'listen', exploreLeft = 0, lastTick = 0, timerId = null, hintUsed = false, maxRows = ROWS, dailyDate = '', clockId = null;
   const tiles = [], keyEls = {};
   const mod = (a,n) => ((a%n)+n)%n;
   const isBlack = m => [1,3,6,8,10].includes(mod(m,12));
   const store = {
     get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
-    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+    getJSON(k,d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+    setJSON(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
   };
+
+  // ---------- dates and seeded randomness ----------
+  const pad = n => String(n).padStart(2,'0');
+  const dstr = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  const today = () => dstr(new Date());
+  const yesterday = () => { const d = new Date(); d.setDate(d.getDate()-1); return dstr(d); };
+  const weekStart = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay()+6) % 7)); return dstr(d); };
+  function nextDailyIn(){
+    const n = new Date(), m = new Date(n); m.setHours(24,0,0,0);
+    const mins = Math.max(1, Math.ceil((m - n) / 60000));
+    return Math.floor(mins/60) + 'h ' + (mins % 60) + 'm';
+  }
+  function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashStr(s){ let h = 1779033703 ^ s.length; for (let i = 0; i < s.length; i++){ h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; } return h >>> 0; }
+  let rand = Math.random;
 
   // ---------- spelling ----------
   function spell(m){
@@ -333,10 +457,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     const deg = m => MAJOR.indexOf(mod(m - tonicPc, 12));
     const moves = [[1,30],[-1,30],[2,10],[-2,10],[3,4],[-3,4],[4,2],[-4,2],[0,3]];
     const total = moves.reduce((s,x) => s + x[1], 0);
-    const pick = () => { let r = Math.random()*total; for (const [v,w] of moves){ if ((r -= w) < 0) return v; } return 1; };
+    const pick = () => { let r = rand()*total; for (const [v,w] of moves){ if ((r -= w) < 0) return v; } return 1; };
     const starts = sc.map((m,i) => i).filter(i => [0,2,4].includes(deg(sc[i])) && sc[i] >= 58 && sc[i] <= 72);
     for (let t = 0; t < 5000; t++){
-      let i = starts[Math.floor(Math.random()*starts.length)];
+      let i = starts[Math.floor(rand()*starts.length)];
       const mel = [sc[i]]; let ok = true;
       for (let n = 1; n < LEN; n++){ i += pick(); if (i < 0 || i >= sc.length){ ok = false; break; } mel.push(sc[i]); }
       if (!ok) continue;
@@ -350,31 +474,74 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     const s = starts[0]; return [sc[s], sc[s+1], sc[s+2], sc[s+1], sc[s]];
   }
 
-  // ---------- audio ----------
+  // ---------- audio: four synthesised keyboards ----------
   let ctx, master;
   function audio(){
     if (!ctx){
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain(); master.gain.value = 0.5;
-      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000;
       master.connect(lp); lp.connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
+  function osc(type, freq, t, stop, dest, amp){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq; g.gain.value = amp;
+    o.connect(g); g.connect(dest); o.start(t); o.stop(stop); return o;
+  }
+  const VOICES = {
+    piano(f, t, dur, vol){
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(vol * 0.35, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800;
+      g.connect(lp); lp.connect(master);
+      const end = t + dur + 0.05;
+      osc('triangle', f, t, end, g, 1); osc('sine', f*2, t, end, g, 0.22); osc('sine', f*3, t, end, g, 0.07);
+    },
+    rhodes(f, t, dur, vol){
+      const g = ctx.createGain(), end = t + dur + 0.7;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(vol * 0.4, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, end);
+      g.connect(master);
+      const car = ctx.createOscillator(), md = ctx.createOscillator(), mg = ctx.createGain();
+      car.type = 'sine'; car.frequency.value = f; md.type = 'sine'; md.frequency.value = f;
+      mg.gain.setValueAtTime(f * 1.6, t); mg.gain.exponentialRampToValueAtTime(f * 0.12, t + 0.6);
+      md.connect(mg); mg.connect(car.frequency); car.connect(g);
+      car.start(t); md.start(t); car.stop(end); md.stop(end);
+      const tg = ctx.createGain(); tg.gain.setValueAtTime(vol * 0.3, t); tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      tg.connect(master); osc('sine', f * 7, t, t + 0.1, tg, 1);
+    },
+    organ(f, t, dur, vol){
+      const g = ctx.createGain(), end = t + dur + 0.08;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.008);
+      g.gain.setValueAtTime(vol, t + dur); g.gain.linearRampToValueAtTime(0.0001, end);
+      g.connect(master);
+      const vib = ctx.createOscillator(), vg = ctx.createGain();
+      vib.frequency.value = 6.3; vg.gain.value = f * 0.005; vib.connect(vg); vib.start(t); vib.stop(end);
+      [[0.5,0.7],[1,1],[1.5,0.7],[2,0.45],[3,0.2],[4,0.12]].forEach(([h,a]) => {
+        const o = osc('sine', f*h, t, end, g, a); vg.connect(o.frequency);
+      });
+      const cg = ctx.createGain(); cg.gain.setValueAtTime(vol * 0.12, t); cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.015);
+      cg.connect(master); osc('square', f * 8, t, t + 0.02, cg, 1);   // key click
+    },
+    harpsichord(f, t, dur, vol){
+      const g = ctx.createGain(), end = t + Math.max(dur, 0.7) + 0.4;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(vol * 0.3, t + 0.15); g.gain.exponentialRampToValueAtTime(0.0001, end);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 2;
+      lp.frequency.setValueAtTime(Math.min(9000, f * 14), t); lp.frequency.exponentialRampToValueAtTime(Math.max(900, f * 3), t + 0.3);
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = f * 0.9;
+      lp.connect(hp); hp.connect(g); g.connect(master);
+      osc('sawtooth', f, t, end, lp, 0.5); osc('sawtooth', f * 1.003, t, end, lp, 0.4);
+    }
+  };
+  const INST_VOL = {piano:1, rhodes:1.15, organ:0.45, harpsichord:0.6};
   function tone(m, t, dur, vol){
-    vol = vol || 0.32;
-    const f = 440 * Math.pow(2, (m - 69) / 12), g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(vol * 0.35, t + 0.25);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    g.connect(master);
-    [[1,'triangle',1],[2,'sine',0.22],[3,'sine',0.07]].forEach(([h,type,a]) => {
-      const o = ctx.createOscillator(), og = ctx.createGain();
-      o.type = type; o.frequency.value = f*h; og.gain.value = a;
-      o.connect(og); og.connect(g); o.start(t); o.stop(t + dur + 0.05);
-    });
+    vol = (vol || 0.32) * INST_VOL[inst];
+    VOICES[inst](440 * Math.pow(2, (m - 69) / 12), t, dur, vol);
   }
   function chord(t){
     const r = LOW + mod(tonicPc - mod(LOW,12), 12);
@@ -399,6 +566,81 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   }
   function clearToast(){ clearTimeout(toastTimer); toastEl.classList.remove('show'); }
   const hint = t => { hintEl.textContent = t; };
+
+  // ---------- stats ----------
+  function defStats(){ return {daily:{played:0,won:0,cur:0,max:0,lastWon:'',dist:[0,0,0,0,0]}, practice:{played:0,won:0,cur:0,max:0}, scores:[], best:0}; }
+  let stats = (() => { const s = store.getJSON('dd-stats', null), d = defStats(); if (!s) return d;
+    return {daily:Object.assign(d.daily, s.daily||{}), practice:Object.assign(d.practice, s.practice||{}), scores:s.scores||[], best:s.best||0}; })();
+  const saveStats = () => store.setJSON('dd-stats', stats);
+  function record(didWin, row, pts){
+    const t = today();
+    if (mode === 'daily'){
+      const d = stats.daily; d.played++;
+      if (didWin){ d.won++; d.dist[row]++; d.cur = d.lastWon === yesterday() ? d.cur + 1 : 1; d.lastWon = t; d.max = Math.max(d.max, d.cur); }
+      else { d.cur = 0; d.lastWon = ''; }
+    } else {
+      const p = stats.practice; p.played++;
+      if (didWin){ p.won++; p.cur++; p.max = Math.max(p.max, p.cur); } else p.cur = 0;
+    }
+    if (didWin){
+      stats.scores.push({d:t, p:pts});
+      if (stats.scores.length > 400) stats.scores = stats.scores.slice(-400);
+      stats.best = Math.max(stats.best, pts);
+    }
+    saveStats();
+  }
+  function renderStats(){
+    const d = stats.daily, t = today(), ws = weekStart();
+    const cur = (d.lastWon === t || d.lastWon === yesterday()) ? d.cur : 0;
+    $('sPlayed').textContent = d.played;
+    $('sWin').textContent = d.played ? Math.round(d.won / d.played * 100) : 0;
+    $('sCur').textContent = cur; $('sMax').textContent = d.max;
+    const saved = loadDaily(), hl = saved && saved.done && saved.won ? saved.guesses.length - 1 : -1;
+    const top = Math.max(1, ...d.dist);
+    $('dist').innerHTML = d.dist.map((n, i) =>
+      '<div><span>' + (i+1) + '</span><i' + (i === hl ? ' class="hl"' : '') + ' style="width:' + Math.max(8, n/top*100) + '%">' + n + '</i></div>').join('');
+    const bestOf = f => stats.scores.filter(f).reduce((m, s) => Math.max(m, s.p), 0);
+    $('bToday').textContent = bestOf(s => s.d === t);
+    $('bWeek').textContent = bestOf(s => s.d >= ws);
+    $('bAll').textContent = stats.best;
+    $('pPlayed').textContent = stats.practice.played; $('pCur').textContent = stats.practice.cur; $('pMax').textContent = stats.practice.max;
+    $('statsFoot').hidden = !(saved && saved.done);
+    $('nextIn').textContent = 'in ' + nextDailyIn();
+  }
+  function openStats(){ renderStats(); const d = $('statsDlg'); if (!d.open) d.showModal(); }
+
+  // ---------- daily persistence ----------
+  function loadDaily(){ const d = store.getJSON('dd-daily', null); return d && d.date === today() ? d : null; }
+  function saveDaily(){
+    if (mode !== 'daily') return;
+    const s = {date:dailyDate, expert:isExpert, plays, heard, guesses, hintUsed, done:over, won, score};
+    if (over) s.share = shareText();
+    store.setJSON('dd-daily', s);
+  }
+
+  // ---------- share ----------
+  function shareText(){
+    const sq = {classic:['🟩','🟨'], contrast:['🟧','🟦'], berry:['🟩','🟪']}[root.dataset.palette] || ['🟩','🟨'];
+    const rows = guesses.map(g => evaluate(g).map(r => r === 'correct' ? sq[0] : r === 'present' ? sq[1] : '⬜').join('')).join('\n');
+    const date = new Date(dailyDate + 'T12:00').toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+    const link = location.origin && location.origin !== 'null' ? '\n' + location.origin + location.pathname : '';
+    return 'Daily Dots ' + date + (isExpert ? ' (Expert)' : '') + (hintUsed ? ' 💡' : '') + '\n' +
+      (won ? guesses.length : 'X') + '/5' + (won ? ' · ' + score + ' pts' : '') + '\n' + rows + link;
+  }
+  async function copyText(txt){
+    try { await navigator.clipboard.writeText(txt); return true; }
+    catch(e){
+      const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch(_){} ta.remove(); return ok;
+    }
+  }
+  async function share(btn){
+    const saved = loadDaily(); if (!saved || !saved.share) return;
+    const ok = await copyText(saved.share), old = btn.textContent;
+    btn.textContent = ok ? 'Copied' : 'Copy failed';
+    setTimeout(() => { btn.textContent = old; }, 2000);
+    if (ok && !$('statsDlg').open) toast('Copied. Paste it into your class chat.');
+  }
 
   // ---------- rendering ----------
   function buildGrid(){
@@ -426,6 +668,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     for (let c = 0; c < LEN; c++) setTile(tiles[r][c], current[c]);
     if (popIndex != null) animate(tiles[r][popIndex], 'pop');
   }
+  function markLost(){
+    for (let r = maxRows; r < ROWS; r++) tiles[r].forEach(el => { el.classList.add('lost'); el.setAttribute('aria-label', 'Row lost to the hint'); });
+  }
   function buildKeyboard(){
     kbd.innerHTML = '';
     const whites = []; for (let m = LOW; m <= HIGH; m++) if (!isBlack(m)) whites.push(m);
@@ -434,7 +679,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       const b = document.createElement('button'); b.type = 'button';
       if (isBlack(m)){
         b.className = 'black';
-        const i = whites.indexOf(m-1) + 1;   // boundary index between white keys
+        const i = whites.indexOf(m-1) + 1;
         b.style.width = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * 0.66 + 4px)';
         b.style.left = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * ' + i + ' + ' + (gap*i - gap/2) + 'px)';
         b.style.transform = 'translateX(-50%)';
@@ -455,6 +700,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       el.setAttribute('aria-label', label(m) + (status[m] ? ', ' + {correct:'correct',present:'in the melody',absent:'not in the melody'}[status[m]] : ''));
     }
   }
+  const dailyLocked = () => mode === 'daily' && (heard || over);
   function renderControls(){
     pipsEl.innerHTML = '';
     for (let i = 0; i < PLAYS; i++){
@@ -465,17 +711,24 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     pipsEl.appendChild(sm);
     playBtn.disabled = busy || (!over && plays === 0);
     playBtn.classList.toggle('playing', busy);
-    checkBtn.disabled = busy || over;
-    checkBtn.classList.toggle('ready', !busy && !over && current.length === LEN);
-    delBtn.disabled = busy || over || current.length === 0;
-    hearBtn.disabled = busy || current.length === 0;
     keyEl.textContent = showKey.checked ? key.name + ' major' : 'Key hidden';
     checkBtn.disabled = busy || phase !== 'enter';
     delBtn.disabled = busy || phase !== 'enter' || current.length === 0;
     checkBtn.classList.toggle('ready', !busy && phase === 'enter' && current.length === LEN);
+    hearBtn.disabled = busy || current.length === 0;
     hearBtn.hidden = isExpert && !over;
     hintBtn.hidden = !isExpert;
     hintBtn.disabled = !canHint();
+    newBtn.hidden = mode === 'daily';
+    shareBtn.hidden = !(mode === 'daily' && over);
+    expert.disabled = dailyLocked();
+    expert.checked = dailyLocked() ? isExpert : expertPref;
+    $('expertDesc').textContent = dailyLocked()
+      ? 'Locked for today’s daily melody. You can change it in Practice.'
+      : 'One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.';
+    $('daylabel').textContent = mode === 'daily'
+      ? new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'})
+      : 'Unlimited melodies';
     renderPhase();
   }
   function renderPhase(){
@@ -502,7 +755,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   function tick(){
     const now = performance.now(), dt = now - lastTick; lastTick = now;
     if (phase !== 'explore'){ clearInterval(timerId); return; }
-    if (busy) return;                       // timer pauses while the melody plays
+    if (busy) return;
     exploreLeft -= dt;
     if (exploreLeft <= 0) startEnter(); else renderPhase();
   }
@@ -517,9 +770,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   }
   function useHint(){
     if (!canHint()) return;
-    hintUsed = true; maxRows = ROWS - 2;
-    for (let r = maxRows; r < ROWS; r++) tiles[r].forEach(el => { el.classList.add('lost'); el.setAttribute('aria-label', 'Row lost to the hint'); });
+    hintUsed = true; maxRows = ROWS - 2; markLost();
     toast('Hint used: one more listen, two rows gone');
+    saveDaily();
     playSeq(melody, chordOn.checked, () => { if (phase === 'explore') startExplore(); });
   }
 
@@ -534,6 +787,14 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       if (res[i] !== 'correct' && left[g[i]] > 0){ res[i] = 'present'; left[g[i]]--; }
     }
     return res;
+  }
+  function updateStatus(g, res){
+    const rank = {absent:1, present:2, correct:3};
+    g.forEach((m, i) => { if (!status[m] || rank[res[i]] > rank[status[m]]) status[m] = res[i]; });
+  }
+  function calcScore(row){
+    const s = Math.max(0, ROW_PTS[row] + LISTEN_BONUS * plays - (hintUsed ? HINT_COST : 0));
+    return isExpert ? s * 2 : s;
   }
   function press(m){
     const el = keyEls[m]; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 140);
@@ -562,7 +823,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     guesses.push(g); current = [];
     phase = 'check'; hint('');
     busy = true; renderControls(); audio();
-    const step = BEAT * 1000;               // flips and notes at the melody's tempo
+    const step = BEAT * 1000;
     res.forEach((r, i) => {
       setTimeout(() => {
         if (id !== gameId) return;
@@ -579,25 +840,44 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     setTimeout(() => { if (id === gameId) finish(g, res, row); }, (LEN - 1) * step + (reduce ? 200 : 700));
   }
   function finish(g, res, row){
-    const rank = {absent:1, present:2, correct:3};
-    g.forEach((m, i) => { if (!status[m] || rank[res[i]] > rank[status[m]]) status[m] = res[i]; });
-    renderKeys();
+    updateStatus(g, res); renderKeys();
     busy = false;
     if (res.every(r => r === 'correct')){
-      over = true; phase = 'over';
+      over = true; phase = 'over'; won = true; score = calcScore(row);
       tiles[row].forEach((el, i) => setTimeout(() => animate(el, 'win'), i * 100));
-      toast(WIN[row], true);
-      hint('Press New melody for another.');
+      toast(WIN[row] + '  +' + score, true);
+      record(true, row, score);
+      afterEnd();
     } else if (guesses.length === maxRows){
-      over = true; phase = 'over';
+      over = true; phase = 'over'; won = false; score = 0;
       toast(melody.map(label).join('  '), true);
-      hint('That was the melody. Press play to hear it again.');
+      record(false);
+      afterEnd();
     } else {
+      saveDaily();
       hint('Attempt ' + (guesses.length + 1) + '. Explore, then enter your notes.' + (plays === 0 ? ' No listens left.' : ''));
       startExplore();
       return;
     }
     renderControls();
+  }
+  function afterEnd(){
+    if (mode === 'daily'){
+      saveDaily(); showDailyDone();
+      setTimeout(() => { if (mode === 'daily' && !document.querySelector('dialog[open]')) openStats(); }, 2200);
+    } else {
+      hint(won ? score + ' points. Press New melody for another.' : 'That was the melody. Press play to hear it again.');
+    }
+  }
+  function showDailyDone(){
+    const msg = () => (won ? score + ' points. ' : 'The melody was ' + melody.map(label).join(', ') + '. ') + 'Next daily melody in ' + nextDailyIn() + '.';
+    hint(msg());
+    clearInterval(clockId);
+    clockId = setInterval(() => {
+      if (mode !== 'daily') { clearInterval(clockId); return; }
+      if (today() !== dailyDate){ clearInterval(clockId); newGame(); return; }
+      if (over) hint(msg());
+    }, 30000);
   }
   function listen(){
     if (busy) return;
@@ -605,40 +885,75 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     if (plays <= 0 || phase === 'check') return;
     plays--; heard = true;
     if (phase === 'listen') hint('');
+    saveDaily();
     playSeq(melody, chordOn.checked, () => {
       if (phase === 'listen'){ hint('Explore the keyboard. Nothing goes in the tiles yet.'); startExplore(); }
-      else if (phase === 'explore') startExplore();   // a fresh explore window after each listen
+      else if (phase === 'explore') startExplore();
     });
+    renderControls();
   }
   function hear(){ if (!busy && current.length && !(isExpert && !over)) playSeq(current.slice(), false); }
+
+  function applyGameSettings(){
+    PLAYS = isExpert ? 1 : 3;
+    EXPLORE_MS = isExpert ? 8000 : 15000;
+    if (isExpert){ showKey.checked = false; chordOn.checked = true; }
+    else { showKey.checked = showKeyPref; chordOn.checked = chordPref; }
+    showKey.disabled = chordOn.disabled = isExpert;
+    $('keyDesc').textContent = isExpert ? 'Locked off in Expert mode.' : 'Shows the key name above the grid.';
+  }
   function newGame(){
-    gameId++;
-    key = KEYS[Math.floor(Math.random() * KEYS.length)];
+    gameId++; clearInterval(timerId); clearInterval(clockId);
+    let saved = null;
+    if (mode === 'daily'){
+      dailyDate = today(); rand = mulberry32(hashStr('daily-dots-' + dailyDate));
+      saved = loadDaily(); isExpert = saved ? saved.expert : expertPref;
+    } else { rand = Math.random; isExpert = expertPref; }
+    applyGameSettings();
+    key = KEYS[Math.floor(rand() * KEYS.length)];
     tonicPc = mod(NAT[key.letter] + key.acc, 12);
     melody = generate();
     guesses = []; current = []; plays = PLAYS; heard = false; over = false; busy = false; status = {};
-    clearInterval(timerId); phase = 'listen'; hintUsed = false; maxRows = ROWS;
-    clearToast(); buildGrid(); renderKeys(); renderControls();
-    hint(PLAYS === 1 ? 'Press play to hear the melody. One listen, so make it count.' : 'Press play to hear the melody. You get three listens.');
+    phase = 'listen'; hintUsed = false; maxRows = ROWS; won = false; score = 0;
+    clearToast(); buildGrid();
+    let resume = false;
+    if (saved){
+      plays = saved.plays; heard = saved.heard; hintUsed = saved.hintUsed;
+      if (hintUsed){ maxRows = ROWS - 2; markLost(); }
+      saved.guesses.forEach((g, r) => {
+        guesses.push(g); const res = evaluate(g);
+        g.forEach((m, i) => { setTile(tiles[r][i], m); tiles[r][i].classList.add(res[i]); });
+        updateStatus(g, res);
+      });
+      if (saved.done){ over = true; phase = 'over'; won = saved.won; score = saved.score; }
+      else if (heard) resume = true;
+    }
+    renderKeys(); renderControls();
+    if (over) showDailyDone();
+    else if (resume){ hint('Welcome back. Explore, then enter your notes.'); startExplore(); }
+    else hint((mode === 'daily' ? 'Today’s melody. ' : '') + (PLAYS === 1 ? 'Press play to listen. One listen, so make it count.' : 'Press play to listen. You get three listens.'));
   }
 
   // ---------- settings ----------
-  function applyExpert(on, fresh){
-    PLAYS = on ? 1 : 3;
-    EXPLORE_MS = on ? 8000 : 15000;
-    isExpert = on;
-    expert.checked = on;
-    if (on){ showKey.checked = false; chordOn.checked = true; }
-    else { showKey.checked = true; }
-    showKey.disabled = chordOn.disabled = on;
-    $('keyDesc').textContent = on ? 'Locked off in Expert mode.' : 'Shows the key name above the grid.';
-    store.set('dd-expert', on ? '1' : '0');
-    if (fresh) newGame();
-  }
   function applyPalette(p){
     root.dataset.palette = p;
-    document.querySelectorAll('.pal').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.palette === p)));
+    document.querySelectorAll('.palette').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.palette === p)));
     store.set('dd-palette', p);
+  }
+  function applyInst(name, preview){
+    inst = name; root.dataset.inst = name;
+    document.querySelectorAll('.inst').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.inst === name)));
+    store.set('dd-inst', name);
+    if (preview && !busy){
+      audio(); const r = LOW + mod(tonicPc - mod(LOW,12), 12), t = ctx.currentTime + 0.05;
+      [r, r+4, r+7, r+12].forEach((m, i) => tone(m, t + i*0.14, 0.6, 0.28));
+    }
+  }
+  function setMode(m){
+    if (m === mode) return;
+    mode = m;
+    document.querySelectorAll('.modebar button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    newGame();
   }
 
   // ---------- wiring ----------
@@ -646,14 +961,23 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   checkBtn.addEventListener('click', check);
   delBtn.addEventListener('click', del);
   hearBtn.addEventListener('click', hear);
-  $('new').addEventListener('click', newGame);
-  showKey.addEventListener('change', renderControls);
-  expert.addEventListener('change', () => applyExpert(expert.checked, true));
-  document.querySelectorAll('.pal').forEach(b => b.addEventListener('click', () => applyPalette(b.dataset.palette)));
+  newBtn.addEventListener('click', newGame);
+  shareBtn.addEventListener('click', () => share(shareBtn));
+  $('statsShare').addEventListener('click', () => share($('statsShare')));
+  showKey.addEventListener('change', () => { if (!isExpert) showKeyPref = showKey.checked; renderControls(); });
+  chordOn.addEventListener('change', () => { if (!isExpert) chordPref = chordOn.checked; });
+  expert.addEventListener('change', () => {
+    if (dailyLocked()) return;
+    expertPref = expert.checked; store.set('dd-expert', expertPref ? '1' : '0'); newGame();
+  });
+  document.querySelectorAll('.palette').forEach(b => b.addEventListener('click', () => applyPalette(b.dataset.palette)));
+  document.querySelectorAll('.inst').forEach(b => b.addEventListener('click', () => applyInst(b.dataset.inst, true)));
+  document.querySelectorAll('.modebar button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
   readyBtn.addEventListener('click', () => { if (phase === 'explore' && !busy) startEnter(); });
   hintBtn.addEventListener('click', useHint);
   $('helpBtn').addEventListener('click', () => $('helpDlg').showModal());
-  $('settingsBtn').addEventListener('click', () => $('settingsDlg').showModal());
+  $('statsBtn').addEventListener('click', openStats);
+  $('settingsBtn').addEventListener('click', () => { renderControls(); $('settingsDlg').showModal(); });
   document.querySelectorAll('dialog').forEach(d => {
     d.querySelector('[data-close]').addEventListener('click', () => d.close());
     d.addEventListener('click', e => { if (e.target === d) d.close(); });
@@ -667,9 +991,11 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
 
   const savedPal = store.get('dd-palette');
   applyPalette(['classic','contrast','berry'].includes(savedPal) ? savedPal : 'classic');
+  const savedInst = store.get('dd-inst');
+  applyInst(VOICES[savedInst] ? savedInst : 'piano', false);
+  expertPref = store.get('dd-expert') === '1';
   buildKeyboard();
   key = KEYS[0]; tonicPc = 0;
-  applyExpert(store.get('dd-expert') === '1', false);
   newGame();
   if (!store.get('dd-seen-help')){ store.set('dd-seen-help','1'); $('helpDlg').showModal(); }
 })();
