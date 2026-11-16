@@ -199,6 +199,7 @@ dialog li{margin-bottom:6px}
 .choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pal{border:2px solid var(--line);background:transparent;border-radius:6px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.8rem;font-weight:700}
 .pal[aria-pressed="true"]{border-color:var(--ink)}
+.pal:disabled{opacity:.45;cursor:not-allowed}
 .sw{display:flex;gap:3px}
 .sw i{width:16px;height:16px;display:block;border:1px solid rgba(0,0,0,.15)}
 
@@ -298,8 +299,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <li>Then play your five notes into the row and press Enter. The tiles change colour to show how close you were.</li>
     <li>Octave matters: C4 and C5 are different notes.</li>
     <li>Daily is the same melody for everyone, once a day. Practice is as many melodies as you like.</li>
-    <li>Scoring: 500 points for solving on row 1, down to 100 on row 5, plus 50 for each listen you didn’t use. Expert doubles your score.</li>
+    <li>Scoring: 500 points for solving on row 1, down to 100 on row 5, plus 50 for each listen you didn’t use. Expert doubles your score, and God mode triples it.</li>
     <li>Expert mode: 8 seconds to explore, and the keys are silent while you enter notes. One hint per game gives you another listen, but costs two rows and 100 points.</li>
+    <li>God mode: Expert rules, plus minor keys, chromatic notes and bigger leaps. You hear a single tonic note instead of the chord.</li>
   </ul>
   <div class="example" aria-hidden="true">
     <div class="tile correct">E♭<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
@@ -352,16 +354,21 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
   </button>
   <h2 id="setTitle">Settings</h2>
-  <div class="row">
-    <div><div class="t">Expert mode</div><div class="d" id="expertDesc">One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.</div></div>
-    <input type="checkbox" class="switch" id="expert" role="switch" aria-label="Expert mode">
+  <div class="row" style="display:block">
+    <div class="t">Difficulty</div>
+    <div class="d" id="levelDesc"></div>
+    <div class="choices" role="group" aria-label="Difficulty">
+      <button type="button" class="pal lvl" data-level="standard" aria-pressed="true">Standard</button>
+      <button type="button" class="pal lvl" data-level="expert" aria-pressed="false">Expert</button>
+      <button type="button" class="pal lvl" data-level="god" aria-pressed="false">God mode</button>
+    </div>
   </div>
   <div class="row">
     <div><div class="t">Show the key</div><div class="d" id="keyDesc">Shows the key name above the grid.</div></div>
     <input type="checkbox" class="switch" id="showKey" role="switch" aria-label="Show the key" checked>
   </div>
   <div class="row">
-    <div><div class="t">Play the key chord first</div><div class="d">Plays the tonic chord before the melody.</div></div>
+    <div><div class="t">Play the key chord first</div><div class="d" id="chordDesc">Plays the tonic chord before the melody.</div></div>
     <input type="checkbox" class="switch" id="chordOn" role="switch" aria-label="Play the key chord first" checked>
   </div>
   <div class="row" style="display:block">
@@ -397,18 +404,32 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     {name:'F♯',letter:3,acc:1},{name:'G',letter:4,acc:0},{name:'A♭',letter:5,acc:-1},
     {name:'A',letter:5,acc:0},{name:'B♭',letter:6,acc:-1},{name:'B',letter:6,acc:0}
   ];
+  const KEYS_MINOR = [
+    {name:'C',letter:0,acc:0},{name:'C♯',letter:0,acc:1},{name:'D',letter:1,acc:0},
+    {name:'E♭',letter:2,acc:-1},{name:'E',letter:2,acc:0},{name:'F',letter:3,acc:0},
+    {name:'F♯',letter:3,acc:1},{name:'G',letter:4,acc:0},{name:'G♯',letter:4,acc:1},
+    {name:'A',letter:5,acc:0},{name:'B♭',letter:6,acc:-1},{name:'B',letter:6,acc:0}
+  ];
+  // semitones above the tonic -> scale-degree letter (works for major and minor, chromatic notes included)
+  const SPELL = [0,1,1,2,2,3,3,4,5,5,6,6];
+  const HARMONIC_MINOR = [0,2,3,5,7,8,11], MELODIC_MINOR = [0,2,3,5,7,9,11];
+  const LEVEL_DESC = {
+    standard: 'Three listens, 15 seconds to explore and the key is shown.',
+    expert: 'One listen, 8 seconds to explore, silent note entry and the key is hidden. Double points.',
+    god: 'Expert rules, plus minor keys, chromatic notes and bigger leaps. A single tonic note instead of the chord. Triple points.'
+  };
   const WIN = ['First go. Show-off.','Two tries. Sharp ears.','Three tries. Solid.','Four tries. Got there.','Phew. Last row.'];
   const ROWS = 5, LEN = 5, BEAT = 0.65;
   const ROW_PTS = [500,400,300,200,100], LISTEN_BONUS = 50, HINT_COST = 100;
   let PLAYS = 3, EXPLORE_MS = 15000;
-  let isExpert = false, expertPref = false, showKeyPref = true, chordPref = true, mode = 'daily', inst = 'piano';
+  let isExpert = false, isGod = false, keyMinor = false, level = 'standard', levelPref = 'standard', showKeyPref = true, chordPref = true, mode = 'daily', inst = 'piano';
 
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
   const hintBtn=$('hintBtn'), readyBtn=$('ready'), phaseLabel=$('phaseLabel'), phaseTime=$('phaseTime'), barEl=$('bar');
   const playBtn=$('play'), grid=$('grid'), kbd=$('kbd'), hintEl=$('hint'), toastEl=$('toast'), pipsEl=$('pips'),
         keyEl=$('keyname'), checkBtn=$('check'), delBtn=$('del'), hearBtn=$('hear'), newBtn=$('new'), shareBtn=$('shareBtn'),
-        showKey=$('showKey'), chordOn=$('chordOn'), expert=$('expert');
+        showKey=$('showKey'), chordOn=$('chordOn');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let key, tonicPc, melody, guesses, current, plays, heard, over, busy, status, won = false, score = 0, gameId = 0;
@@ -440,13 +461,8 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
 
   // ---------- spelling ----------
   function spell(m){
-    const rel = mod(m - tonicPc, 12), d = MAJOR.indexOf(rel);
-    if (d >= 0){
-      const L = (key.letter + d) % 7, acc = mod(m - NAT[L] + 6, 12) - 6;
-      return {name: LETTERS[L] + ACC[acc], oct: Math.floor((m - acc - NAT[L]) / 12) - 1};
-    }
-    const flat = key.acc < 0 || key.name === 'F';
-    return {name: (flat ? FLAT : SHARP)[mod(m,12)], oct: Math.floor(m/12) - 1};
+    const rel = mod(m - tonicPc, 12), L = (key.letter + SPELL[rel]) % 7, acc = mod(m - NAT[L] + 6, 12) - 6;
+    return {name: LETTERS[L] + ACC[acc], oct: Math.floor((m - acc - NAT[L]) / 12) - 1};
   }
   const label = m => { const s = spell(m); return s.name + s.oct; };
 
@@ -472,6 +488,37 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       return mel;
     }
     const s = starts[0]; return [sc[s], sc[s+1], sc[s+2], sc[s+1], sc[s]];
+  }
+
+  function generateGod(scale){
+    const inScale = m => scale.includes(mod(m - tonicPc, 12));
+    const sc = []; for (let m = LOW; m <= HIGH; m++) if (inScale(m)) sc.push(m);
+    const deg = m => scale.indexOf(mod(m - tonicPc, 12));
+    const moves = [[1,20],[-1,20],[2,14],[-2,14],[3,10],[-3,10],[4,8],[-4,8],[5,4],[-5,4],[7,2],[-7,2],[0,2]];
+    const total = moves.reduce((s,x) => s + x[1], 0);
+    const pick = () => { let r = rand()*total; for (const [v,w] of moves){ if ((r -= w) < 0) return v; } return 1; };
+    const starts = sc.map((m,i) => i).filter(i => [0,2,4].includes(deg(sc[i])) && sc[i] >= 57 && sc[i] <= 72);
+    for (let t = 0; t < 8000; t++){
+      let i = starts[Math.floor(rand()*starts.length)];
+      const mel = [sc[i]]; let ok = true;
+      for (let n = 1; n < LEN; n++){ i += pick(); if (i < 0 || i >= sc.length){ ok = false; break; } mel.push(sc[i]); }
+      if (!ok) continue;
+      let span = Math.max(...mel) - Math.min(...mel);
+      if (span > 16 || span < 5) continue;                        // up to a 10th
+      if (![0,2,4].includes(deg(mel[LEN-1]))) continue;
+      let leap = 0, reps = 0;
+      for (let n = 1; n < LEN; n++){ leap = Math.max(leap, Math.abs(mel[n] - mel[n-1])); if (mel[n] === mel[n-1]) reps++; }
+      if (leap < 5 || reps > 1) continue;                          // at least one leap of a 4th or more
+      if (rand() < 0.75){                                          // a chromatic neighbour or passing note
+        const k = 1 + Math.floor(rand()*3), dir = rand() < 0.5 ? 1 : -1;
+        let c = mel[k] + dir; if (inScale(c)) c = mel[k] - dir;
+        if (!inScale(c) && c >= LOW && c <= HIGH && c !== mel[k-1] && c !== mel[k+1]) mel[k] = c;
+        span = Math.max(...mel) - Math.min(...mel);
+        if (span > 16) continue;
+      }
+      return mel;
+    }
+    const s = starts[0]; return [sc[s], sc[s+2], sc[s+4], sc[s+1], sc[s]];
   }
 
   // ---------- audio: four synthesised keyboards ----------
@@ -543,15 +590,17 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     vol = (vol || 0.32) * INST_VOL[inst];
     VOICES[inst](440 * Math.pow(2, (m - 69) / 12), t, dur, vol);
   }
-  function chord(t){
+  function reference(t){
+    if (isGod){ tone(60 + mod(tonicPc - 60, 12), t, 1.0, 0.3); return 1.3; }   // a single tonic note
     const r = LOW + mod(tonicPc - mod(LOW,12), 12);
-    [r - 12, r, r + 4, r + 7].forEach(m => tone(m, t, 1.2, 0.16));
+    [r - 12, r, r + (keyMinor ? 3 : 4), r + 7].forEach(m => tone(m, t, 1.2, 0.16));
+    return 1.4;
   }
   function playSeq(notes, withChord, done){
     audio(); busy = true; renderControls();
     const id = gameId;
     let t = ctx.currentTime + 0.05;
-    if (withChord){ chord(t); t += 1.4; }
+    if (withChord) t += reference(t);
     notes.forEach((m,i) => tone(m, t + i*BEAT, 0.8));
     const ms = (t - ctx.currentTime + notes.length*BEAT + 0.3) * 1000;
     setTimeout(() => { if (id !== gameId) return; busy = false; renderControls(); if (done) done(); }, ms);
@@ -613,7 +662,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   function loadDaily(){ const d = store.getJSON('dd-daily', null); return d && d.date === today() ? d : null; }
   function saveDaily(){
     if (mode !== 'daily') return;
-    const s = {date:dailyDate, expert:isExpert, plays, heard, guesses, hintUsed, done:over, won, score};
+    const s = {date:dailyDate, level, expert:isExpert, plays, heard, guesses, hintUsed, done:over, won, score};
     if (over) s.share = shareText();
     store.setJSON('dd-daily', s);
   }
@@ -624,7 +673,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     const rows = guesses.map(g => evaluate(g).map(r => r === 'correct' ? sq[0] : r === 'present' ? sq[1] : '⬜').join('')).join('\n');
     const date = new Date(dailyDate + 'T12:00').toLocaleDateString('en-GB', {day:'numeric', month:'short'});
     const link = location.origin && location.origin !== 'null' ? '\n' + location.origin + location.pathname : '';
-    return 'Daily Dots ' + date + (isExpert ? ' (Expert)' : '') + (hintUsed ? ' 💡' : '') + '\n' +
+    return 'Daily Dots ' + date + (isGod ? ' (God mode)' : isExpert ? ' (Expert)' : '') + (hintUsed ? ' 💡' : '') + '\n' +
       (won ? guesses.length : 'X') + '/5' + (won ? ' · ' + score + ' pts' : '') + '\n' + rows + link;
   }
   async function copyText(txt){
@@ -711,7 +760,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     pipsEl.appendChild(sm);
     playBtn.disabled = busy || (!over && plays === 0);
     playBtn.classList.toggle('playing', busy);
-    keyEl.textContent = showKey.checked ? key.name + ' major' : 'Key hidden';
+    keyEl.textContent = showKey.checked ? key.name + (keyMinor ? ' minor' : ' major') : 'Key hidden';
     checkBtn.disabled = busy || phase !== 'enter';
     delBtn.disabled = busy || phase !== 'enter' || current.length === 0;
     checkBtn.classList.toggle('ready', !busy && phase === 'enter' && current.length === LEN);
@@ -721,11 +770,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     hintBtn.disabled = !canHint();
     newBtn.hidden = mode === 'daily';
     shareBtn.hidden = !(mode === 'daily' && over);
-    expert.disabled = dailyLocked();
-    expert.checked = dailyLocked() ? isExpert : expertPref;
-    $('expertDesc').textContent = dailyLocked()
-      ? 'Locked for today’s daily melody. You can change it in Practice.'
-      : 'One listen, 8 seconds to explore, silent note entry and the key is hidden. Switching starts a new melody.';
+    const locked = dailyLocked(), shown = locked ? level : levelPref;
+    document.querySelectorAll('.lvl').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.level === shown)); b.disabled = locked; });
+    $('levelDesc').textContent = locked ? 'Locked for today’s daily melody. You can change it in Practice.' : LEVEL_DESC[levelPref] + ' Switching starts a new melody.';
     $('daylabel').textContent = mode === 'daily'
       ? new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'})
       : 'Unlimited melodies';
@@ -794,7 +841,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   }
   function calcScore(row){
     const s = Math.max(0, ROW_PTS[row] + LISTEN_BONUS * plays - (hintUsed ? HINT_COST : 0));
-    return isExpert ? s * 2 : s;
+    return s * (isGod ? 3 : isExpert ? 2 : 1);
   }
   function press(m){
     const el = keyEls[m]; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 140);
@@ -900,19 +947,30 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     if (isExpert){ showKey.checked = false; chordOn.checked = true; }
     else { showKey.checked = showKeyPref; chordOn.checked = chordPref; }
     showKey.disabled = chordOn.disabled = isExpert;
-    $('keyDesc').textContent = isExpert ? 'Locked off in Expert mode.' : 'Shows the key name above the grid.';
+    $('keyDesc').textContent = isExpert ? 'Locked off in ' + (isGod ? 'God mode.' : 'Expert mode.') : 'Shows the key name above the grid.';
+    $('chordDesc').textContent = isGod ? 'God mode plays a single tonic note instead.' : 'Plays the tonic chord before the melody.';
   }
   function newGame(){
     gameId++; clearInterval(timerId); clearInterval(clockId);
     let saved = null;
     if (mode === 'daily'){
-      dailyDate = today(); rand = mulberry32(hashStr('daily-dots-' + dailyDate));
-      saved = loadDaily(); isExpert = saved ? saved.expert : expertPref;
-    } else { rand = Math.random; isExpert = expertPref; }
+      dailyDate = today(); saved = loadDaily();
+      level = saved ? (saved.level || (saved.expert ? 'expert' : 'standard')) : levelPref;
+      rand = mulberry32(hashStr((level === 'god' ? 'daily-dots-god-' : 'daily-dots-') + dailyDate));
+    } else { rand = Math.random; level = levelPref; }
+    isGod = level === 'god'; isExpert = level !== 'standard';
     applyGameSettings();
-    key = KEYS[Math.floor(rand() * KEYS.length)];
-    tonicPc = mod(NAT[key.letter] + key.acc, 12);
-    melody = generate();
+    if (isGod){
+      keyMinor = rand() < 0.6;
+      key = (keyMinor ? KEYS_MINOR : KEYS)[Math.floor(rand() * 12)];
+      tonicPc = mod(NAT[key.letter] + key.acc, 12);
+      melody = generateGod(keyMinor ? (rand() < 0.7 ? HARMONIC_MINOR : MELODIC_MINOR) : MAJOR);
+    } else {
+      keyMinor = false;
+      key = KEYS[Math.floor(rand() * KEYS.length)];
+      tonicPc = mod(NAT[key.letter] + key.acc, 12);
+      melody = generate();
+    }
     guesses = []; current = []; plays = PLAYS; heard = false; over = false; busy = false; status = {};
     phase = 'listen'; hintUsed = false; maxRows = ROWS; won = false; score = 0;
     clearToast(); buildGrid();
@@ -966,10 +1024,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   $('statsShare').addEventListener('click', () => share($('statsShare')));
   showKey.addEventListener('change', () => { if (!isExpert) showKeyPref = showKey.checked; renderControls(); });
   chordOn.addEventListener('change', () => { if (!isExpert) chordPref = chordOn.checked; });
-  expert.addEventListener('change', () => {
-    if (dailyLocked()) return;
-    expertPref = expert.checked; store.set('dd-expert', expertPref ? '1' : '0'); newGame();
-  });
+  document.querySelectorAll('.lvl').forEach(b => b.addEventListener('click', () => {
+    if (dailyLocked() || b.dataset.level === levelPref) return;
+    levelPref = b.dataset.level; store.set('dd-level', levelPref); newGame(); renderControls();
+  }));
   document.querySelectorAll('.palette').forEach(b => b.addEventListener('click', () => applyPalette(b.dataset.palette)));
   document.querySelectorAll('.inst').forEach(b => b.addEventListener('click', () => applyInst(b.dataset.inst, true)));
   document.querySelectorAll('.modebar button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
@@ -993,7 +1051,8 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   applyPalette(['classic','contrast','berry'].includes(savedPal) ? savedPal : 'classic');
   const savedInst = store.get('dd-inst');
   applyInst(VOICES[savedInst] ? savedInst : 'piano', false);
-  expertPref = store.get('dd-expert') === '1';
+  const savedLevel = store.get('dd-level');
+  levelPref = ['standard','expert','god'].includes(savedLevel) ? savedLevel : (store.get('dd-expert') === '1' ? 'expert' : 'standard');
   buildKeyboard();
   key = KEYS[0]; tonicPc = 0;
   newGame();
