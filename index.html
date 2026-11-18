@@ -115,6 +115,8 @@ main{max-width:900px;margin:0 auto;padding:16px 12px 40px}
 .grid{--tile:min(62px, calc((100vw - 48px) / 5));display:grid;grid-template-columns:repeat(5,var(--tile));gap:5px;justify-content:center;perspective:700px}
 .tile{width:var(--tile);height:var(--tile);border:2px solid var(--tile-border);display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-weight:800;font-size:calc(var(--tile) * .36);line-height:1;color:var(--ink)}
+.tile{position:relative}
+.tile .arrow{position:absolute;top:3px;right:5px;font-size:.5em;font-weight:800;line-height:1}
 .tile .oct{font-size:.45em;font-weight:700;margin-top:2px;opacity:.75}
 .tile.filled{border-color:var(--tile-filled)}
 .tile.correct,.tile.present,.tile.absent{color:var(--on)}
@@ -165,6 +167,12 @@ main{max-width:900px;margin:0 auto;padding:16px 12px 40px}
 .wkey.ready{background:var(--ink);color:var(--bg)}
 .newgame{margin-top:10px;width:100%;height:40px;background:transparent;box-shadow:inset 0 0 0 2px var(--line);color:var(--ink)}
 .wkey.share{background:var(--correct);color:var(--on);box-shadow:none}
+.soundnote{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 auto 10px;max-width:340px;
+  background:var(--line);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:.85rem;font-weight:600;text-align:center}
+.soundnote button{border:none;background:var(--ink);color:var(--bg);border-radius:999px;padding:4px 10px;font-weight:700;font-size:.75rem;cursor:pointer}
+.kbdhelp{margin:8px 0 0;font-size:.75rem;color:var(--muted);font-weight:600}
+@media (pointer: coarse){.kbdhelp{display:none}}
+.leveltag{display:inline-block;margin-left:6px;font-size:.7rem;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--line);color:var(--ink);vertical-align:middle}
 .hintbtn{margin-top:7px;border:2px solid var(--present);background:transparent;color:var(--ink);border-radius:999px;font-weight:700;font-size:.75rem;padding:4px 10px;cursor:pointer}
 .hintbtn:disabled{opacity:.35;cursor:not-allowed}
 
@@ -254,11 +262,12 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg>
         </button>
         <div>
-          <div class="keyname" id="keyname"></div>
+          <div class="keyname"><span id="keyname"></span><span class="leveltag" id="levelTag"></span></div>
           <div class="pips" id="pips"></div>
           <button class="hintbtn" id="hintBtn" type="button" hidden>Hint: +1 listen, −2 rows</button>
         </div>
       </div>
+      <div class="soundnote" id="soundNote">🔊 No sound? Turn your volume up. On an iPhone, check the silent switch too. <button type="button" id="soundOk">Sound’s working</button></div>
       <p class="hint" id="hint" aria-live="polite"></p>
       <div class="grid" id="grid"></div>
     </div>
@@ -272,6 +281,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
         <button class="wkey" id="ready" type="button" hidden>Ready</button>
       </div>
       <div class="kbd" id="kbd"></div>
+      <p class="kbdhelp">Laptop keys: A to K play C to C, with W, E, T, Y and U for the black keys. Z and X change octave.</p>
       <div class="actions">
         <button class="wkey" id="check" type="button">Enter</button>
         <button class="wkey grow" id="hear" type="button">Hear my notes</button>
@@ -279,6 +289,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
         </button>
       </div>
+      <button class="wkey newgame" id="compareBtn" type="button" hidden>Compare: my last guess, then the melody</button>
       <button class="wkey share newgame" id="shareBtn" type="button" hidden>Share my result</button>
       <button class="wkey newgame" id="new" type="button">New melody</button>
     </div>
@@ -292,16 +303,17 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
   </button>
   <h2 id="helpTitle">How to play</h2>
-  <p class="lede">Hear the melody, then find it in five tries.</p>
+  <p class="lede">Hear the melody, then find the notes.</p>
   <ul>
-    <li>Press play to hear the five-note melody. You get three listens, or one in Expert mode.</li>
-    <li>After listening you have 15 seconds to explore on the keyboard. Press Ready if you’re done early.</li>
+    <li>Press play to hear the five-note melody. How many listens you get depends on the difficulty.</li>
+    <li>After listening you get time to explore on the keyboard. Press Ready if you’re done early.</li>
     <li>Then play your five notes into the row and press Enter. The tiles change colour to show how close you were.</li>
-    <li>Octave matters: C4 and C5 are different notes.</li>
+    <li>Octave matters: C4 and C5 are different notes. A ↑ or ↓ on a grey tile means right note, wrong octave.</li>
     <li>Daily is the same melody for everyone, once a day. Practice is as many melodies as you like.</li>
-    <li>Scoring: 500 points for solving on row 1, down to 100 on row 5, plus 50 for each listen you didn’t use. Expert doubles your score, and God mode triples it.</li>
-    <li>Expert mode: 8 seconds to explore, and the keys are silent while you enter notes. One hint per game gives you another listen, but costs two rows and 100 points.</li>
-    <li>God mode: Expert rules, plus minor keys, chromatic notes and bigger leaps. You hear a single tonic note instead of the chord.</li>
+    <li>Four difficulty levels, named after dynamics: Piano, Mezzo, Forte and Fortissimo. Change it in Settings.</li>
+    <li>Scoring: 100 points for solving on your last attempt, plus 100 for each attempt left and 50 for each listen you didn’t use. Mezzo doubles your score, Forte triples it and Fortissimo quadruples it.</li>
+    <li>At Forte, one hint per game gives you another listen, but costs two attempts and 100 points.</li>
+    <li>On a laptop, the A to K keys play the keyboard.</li>
   </ul>
   <div class="example" aria-hidden="true">
     <div class="tile correct">E♭<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
@@ -315,6 +327,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <div class="tile filled">C<span class="oct">4</span></div><div class="tile filled">D<span class="oct">4</span></div><div class="tile absent">A♭<span class="oct">4</span></div><div class="tile filled">G<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
   </div>
   <p class="ex-note"><strong>A♭4</strong> isn’t in the melody.</p>
+  <div class="example" aria-hidden="true">
+    <div class="tile filled">E♭<span class="oct">4</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile absent">G<span class="oct">5</span><span class="arrow">↓</span></div><div class="tile filled">F<span class="oct">4</span></div><div class="tile filled">E♭<span class="oct">4</span></div>
+  </div>
+  <p class="ex-note"><strong>G5 ↓</strong> is the right note, but an octave too high.</p>
 </dialog>
 
 <dialog id="statsDlg" aria-labelledby="statsTitle">
@@ -358,9 +374,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     <div class="t">Difficulty</div>
     <div class="d" id="levelDesc"></div>
     <div class="choices" role="group" aria-label="Difficulty">
-      <button type="button" class="pal lvl" data-level="standard" aria-pressed="true">Standard</button>
-      <button type="button" class="pal lvl" data-level="expert" aria-pressed="false">Expert</button>
-      <button type="button" class="pal lvl" data-level="god" aria-pressed="false">God mode</button>
+      <button type="button" class="pal lvl" data-level="piano" aria-pressed="true"><b style="font-style:italic;font-family:Georgia,serif;font-size:1.1rem">p</b>Piano</button>
+      <button type="button" class="pal lvl" data-level="mezzo" aria-pressed="false"><b style="font-style:italic;font-family:Georgia,serif;font-size:1.1rem">mf</b>Mezzo</button>
+      <button type="button" class="pal lvl" data-level="forte" aria-pressed="false"><b style="font-style:italic;font-family:Georgia,serif;font-size:1.1rem">f</b>Forte</button>
+      <button type="button" class="pal lvl" data-level="fortissimo" aria-pressed="false"><b style="font-style:italic;font-family:Georgia,serif;font-size:1.1rem">ff</b>Fortissimo</button>
     </div>
   </div>
   <div class="row">
@@ -370,6 +387,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   <div class="row">
     <div><div class="t">Play the key chord first</div><div class="d" id="chordDesc">Plays the tonic chord before the melody.</div></div>
     <input type="checkbox" class="switch" id="chordOn" role="switch" aria-label="Play the key chord first" checked>
+  </div>
+  <div class="row">
+    <div><div class="t">Note names on keys</div><div class="d">Labels the white keys. Changing difficulty resets this to suit the level.</div></div>
+    <input type="checkbox" class="switch" id="labelsOn" role="switch" aria-label="Note names on keys" checked>
   </div>
   <div class="row" style="display:block">
     <div class="t">Sound</div>
@@ -396,8 +417,6 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   const LOW = 55, HIGH = 79;            // G3 to G5
   const MAJOR = [0,2,4,5,7,9,11], NAT = [0,2,4,5,7,9,11], LETTERS = 'CDEFGAB';
   const ACC = {'-2':'𝄫','-1':'♭','0':'','1':'♯','2':'𝄪'};
-  const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
-  const FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
   const KEYS = [
     {name:'C',letter:0,acc:0},{name:'D♭',letter:1,acc:-1},{name:'D',letter:1,acc:0},
     {name:'E♭',letter:2,acc:-1},{name:'E',letter:2,acc:0},{name:'F',letter:3,acc:0},
@@ -410,30 +429,44 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     {name:'F♯',letter:3,acc:1},{name:'G',letter:4,acc:0},{name:'G♯',letter:4,acc:1},
     {name:'A',letter:5,acc:0},{name:'B♭',letter:6,acc:-1},{name:'B',letter:6,acc:0}
   ];
-  // semitones above the tonic -> scale-degree letter (works for major and minor, chromatic notes included)
-  const SPELL = [0,1,1,2,2,3,3,4,5,5,6,6];
+  const SPELL = [0,1,1,2,2,3,3,4,5,5,6,6];   // semitones above tonic -> scale-degree letter
   const HARMONIC_MINOR = [0,2,3,5,7,8,11], MELODIC_MINOR = [0,2,3,5,7,9,11];
-  const LEVEL_DESC = {
-    standard: 'Three listens, 15 seconds to explore and the key is shown.',
-    expert: 'One listen, 8 seconds to explore, silent note entry and the key is hidden. Double points.',
-    god: 'Expert rules, plus minor keys, chromatic notes and bigger leaps. A single tonic note instead of the chord. Triple points.'
+  const WHITE_NAMES = {0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+
+  const LEVELS = {
+    piano:      {name:'Piano',      plays:3, explore:15000, strict:false, ref:'chord', rows:6, hint:false, mult:1, labels:true,
+                 desc:'Major keys, mostly stepwise. Three listens, 15 seconds to explore, six attempts.'},
+    mezzo:      {name:'Mezzo',      plays:2, explore:12000, strict:false, ref:'chord', rows:5, hint:false, mult:2, labels:true,
+                 desc:'Major keys with leaps up to a 5th. Two listens, 12 seconds to explore, five attempts. Double points.'},
+    forte:      {name:'Forte',      plays:1, explore:8000,  strict:true,  ref:'chord', rows:5, hint:true,  mult:3, labels:false,
+                 desc:'Major and minor keys, leaps up to an octave. One listen, 8 seconds, silent note entry, key hidden, five attempts and one hint. Triple points.'},
+    fortissimo: {name:'Fortissimo', plays:1, explore:8000,  strict:true,  ref:'note',  rows:4, hint:false, mult:4, labels:false,
+                 desc:'Forte plus chromatic notes, and a single tonic note instead of the chord. Four attempts, no hint. Quadruple points.'}
   };
-  const WIN = ['First go. Show-off.','Two tries. Sharp ears.','Three tries. Solid.','Four tries. Got there.','Phew. Last row.'];
-  const ROWS = 5, LEN = 5, BEAT = 0.65;
-  const ROW_PTS = [500,400,300,200,100], LISTEN_BONUS = 50, HINT_COST = 100;
-  let PLAYS = 3, EXPLORE_MS = 15000;
-  let isExpert = false, isGod = false, keyMinor = false, level = 'standard', levelPref = 'standard', showKeyPref = true, chordPref = true, mode = 'daily', inst = 'piano';
+  const SEEDS = {piano:'daily-dots-', mezzo:'daily-dots-mezzo-', forte:'daily-dots-forte-', fortissimo:'daily-dots-god-'};
+  const BIG_MOVES = [[1,20],[-1,20],[2,14],[-2,14],[3,10],[-3,10],[4,8],[-4,8],[5,4],[-5,4],[7,2],[-7,2],[0,2]];
+  const MEZZO_OPTS = {moves:[[1,26],[-1,26],[2,12],[-2,12],[3,7],[-3,7],[4,4],[-4,4],[0,2]], maxSpan:12, minSpan:3, minLeap:3, chrom:0};
+  const FORTE_OPTS = {moves:BIG_MOVES, maxSpan:16, minSpan:5, minLeap:5, chrom:0};
+  const FFF_OPTS   = {moves:BIG_MOVES, maxSpan:16, minSpan:5, minLeap:5, chrom:0.75};
+  const WIN = ['First go. Show-off.','Two tries. Sharp ears.','Three tries. Solid.','Four tries. Got there.','Five tries. Persistence pays.'];
+  const MAX_ROWS = 6, LEN = 5, BEAT = 0.65, LISTEN_BONUS = 50, HINT_COST = 100;
+  const KEYMAP = {a:0,w:1,s:2,e:3,d:4,f:5,t:6,g:7,y:8,h:9,u:10,j:11,k:12,o:13,l:14,p:15,';':16};
+  const SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+
+  let cfg = LEVELS.piano, lv = 'piano', lvPref = 'piano', rows = 6, hintAllowed = false, legacy = null;
+  let PLAYS = 3, EXPLORE_MS = 15000, keyMinor = false;
+  let showKeyPref = true, chordPref = true, labels = true, mode = 'daily', inst = 'piano', kbBase = 60;
 
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
   const hintBtn=$('hintBtn'), readyBtn=$('ready'), phaseLabel=$('phaseLabel'), phaseTime=$('phaseTime'), barEl=$('bar');
   const playBtn=$('play'), grid=$('grid'), kbd=$('kbd'), hintEl=$('hint'), toastEl=$('toast'), pipsEl=$('pips'),
         keyEl=$('keyname'), checkBtn=$('check'), delBtn=$('del'), hearBtn=$('hear'), newBtn=$('new'), shareBtn=$('shareBtn'),
-        showKey=$('showKey'), chordOn=$('chordOn');
+        compareBtn=$('compareBtn'), showKey=$('showKey'), chordOn=$('chordOn'), labelsOn=$('labelsOn');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let key, tonicPc, melody, guesses, current, plays, heard, over, busy, status, won = false, score = 0, gameId = 0;
-  let phase = 'listen', exploreLeft = 0, lastTick = 0, timerId = null, hintUsed = false, maxRows = ROWS, dailyDate = '', clockId = null;
+  let phase = 'listen', exploreLeft = 0, lastTick = 0, timerId = null, hintUsed = false, maxRows = 6, dailyDate = '', clockId = null;
   const tiles = [], keyEls = {};
   const mod = (a,n) => ((a%n)+n)%n;
   const isBlack = m => [1,3,6,8,10].includes(mod(m,12));
@@ -467,7 +500,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   const label = m => { const s = spell(m); return s.name + s.oct; };
 
   // ---------- melody generation ----------
-  function generate(){
+  function generate(){                     // Piano (unchanged since v1, so daily melodies stay the same)
     const sc = [];
     for (let m = LOW; m <= HIGH; m++) if (MAJOR.includes(mod(m - tonicPc, 12))) sc.push(m);
     const deg = m => MAJOR.indexOf(mod(m - tonicPc, 12));
@@ -489,14 +522,12 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     }
     const s = starts[0]; return [sc[s], sc[s+1], sc[s+2], sc[s+1], sc[s]];
   }
-
-  function generateGod(scale){
+  function generateWide(scale, o){         // Mezzo, Forte, Fortissimo
     const inScale = m => scale.includes(mod(m - tonicPc, 12));
     const sc = []; for (let m = LOW; m <= HIGH; m++) if (inScale(m)) sc.push(m);
     const deg = m => scale.indexOf(mod(m - tonicPc, 12));
-    const moves = [[1,20],[-1,20],[2,14],[-2,14],[3,10],[-3,10],[4,8],[-4,8],[5,4],[-5,4],[7,2],[-7,2],[0,2]];
-    const total = moves.reduce((s,x) => s + x[1], 0);
-    const pick = () => { let r = rand()*total; for (const [v,w] of moves){ if ((r -= w) < 0) return v; } return 1; };
+    const total = o.moves.reduce((s,x) => s + x[1], 0);
+    const pick = () => { let r = rand()*total; for (const [v,w] of o.moves){ if ((r -= w) < 0) return v; } return 1; };
     const starts = sc.map((m,i) => i).filter(i => [0,2,4].includes(deg(sc[i])) && sc[i] >= 57 && sc[i] <= 72);
     for (let t = 0; t < 8000; t++){
       let i = starts[Math.floor(rand()*starts.length)];
@@ -504,17 +535,17 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       for (let n = 1; n < LEN; n++){ i += pick(); if (i < 0 || i >= sc.length){ ok = false; break; } mel.push(sc[i]); }
       if (!ok) continue;
       let span = Math.max(...mel) - Math.min(...mel);
-      if (span > 16 || span < 5) continue;                        // up to a 10th
+      if (span > o.maxSpan || span < o.minSpan) continue;
       if (![0,2,4].includes(deg(mel[LEN-1]))) continue;
       let leap = 0, reps = 0;
       for (let n = 1; n < LEN; n++){ leap = Math.max(leap, Math.abs(mel[n] - mel[n-1])); if (mel[n] === mel[n-1]) reps++; }
-      if (leap < 5 || reps > 1) continue;                          // at least one leap of a 4th or more
-      if (rand() < 0.75){                                          // a chromatic neighbour or passing note
+      if (leap < o.minLeap || reps > 1) continue;
+      if (rand() < o.chrom){                                       // a chromatic neighbour or passing note
         const k = 1 + Math.floor(rand()*3), dir = rand() < 0.5 ? 1 : -1;
         let c = mel[k] + dir; if (inScale(c)) c = mel[k] - dir;
         if (!inScale(c) && c >= LOW && c <= HIGH && c !== mel[k-1] && c !== mel[k+1]) mel[k] = c;
         span = Math.max(...mel) - Math.min(...mel);
-        if (span > 16) continue;
+        if (span > o.maxSpan) continue;
       }
       return mel;
     }
@@ -525,6 +556,8 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   let ctx, master;
   function audio(){
     if (!ctx){
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}   // newer iPhones: ignore the silent switch
+      try { const a = new Audio(SILENT_WAV); a.setAttribute('playsinline',''); const pr = a.play(); if (pr) pr.catch(() => {}); } catch(e){}  // older iPhones
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain(); master.gain.value = 0.5;
       const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000;
@@ -572,7 +605,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
         const o = osc('sine', f*h, t, end, g, a); vg.connect(o.frequency);
       });
       const cg = ctx.createGain(); cg.gain.setValueAtTime(vol * 0.12, t); cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.015);
-      cg.connect(master); osc('square', f * 8, t, t + 0.02, cg, 1);   // key click
+      cg.connect(master); osc('square', f * 8, t, t + 0.02, cg, 1);
     },
     harpsichord(f, t, dur, vol){
       const g = ctx.createGain(), end = t + Math.max(dur, 0.7) + 0.4;
@@ -591,16 +624,16 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     VOICES[inst](440 * Math.pow(2, (m - 69) / 12), t, dur, vol);
   }
   function reference(t){
-    if (isGod){ tone(60 + mod(tonicPc - 60, 12), t, 1.0, 0.3); return 1.3; }   // a single tonic note
+    if (cfg.ref === 'note'){ tone(60 + mod(tonicPc - 60, 12), t, 1.0, 0.3); return 1.3; }
     const r = LOW + mod(tonicPc - mod(LOW,12), 12);
     [r - 12, r, r + (keyMinor ? 3 : 4), r + 7].forEach(m => tone(m, t, 1.2, 0.16));
     return 1.4;
   }
-  function playSeq(notes, withChord, done){
+  function playSeq(notes, withRef, done){
     audio(); busy = true; renderControls();
     const id = gameId;
     let t = ctx.currentTime + 0.05;
-    if (withChord) t += reference(t);
+    if (withRef) t += reference(t);
     notes.forEach((m,i) => tone(m, t + i*BEAT, 0.8));
     const ms = (t - ctx.currentTime + notes.length*BEAT + 0.3) * 1000;
     setTimeout(() => { if (id !== gameId) return; busy = false; renderControls(); if (done) done(); }, ms);
@@ -617,9 +650,11 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   const hint = t => { hintEl.textContent = t; };
 
   // ---------- stats ----------
-  function defStats(){ return {daily:{played:0,won:0,cur:0,max:0,lastWon:'',dist:[0,0,0,0,0]}, practice:{played:0,won:0,cur:0,max:0}, scores:[], best:0}; }
+  function defStats(){ return {daily:{played:0,won:0,cur:0,max:0,lastWon:'',dist:[0,0,0,0,0,0]}, practice:{played:0,won:0,cur:0,max:0}, scores:[], best:0}; }
   let stats = (() => { const s = store.getJSON('dd-stats', null), d = defStats(); if (!s) return d;
-    return {daily:Object.assign(d.daily, s.daily||{}), practice:Object.assign(d.practice, s.practice||{}), scores:s.scores||[], best:s.best||0}; })();
+    const out = {daily:Object.assign(d.daily, s.daily||{}), practice:Object.assign(d.practice, s.practice||{}), scores:s.scores||[], best:s.best||0};
+    while (out.daily.dist.length < MAX_ROWS) out.daily.dist.push(0);
+    return out; })();
   const saveStats = () => store.setJSON('dd-stats', stats);
   function record(didWin, row, pts){
     const t = today();
@@ -662,7 +697,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   function loadDaily(){ const d = store.getJSON('dd-daily', null); return d && d.date === today() ? d : null; }
   function saveDaily(){
     if (mode !== 'daily') return;
-    const s = {date:dailyDate, level, expert:isExpert, plays, heard, guesses, hintUsed, done:over, won, score};
+    const s = {date:dailyDate, lv, legacy, plays, heard, guesses, hintUsed, done:over, won, score};
     if (over) s.share = shareText();
     store.setJSON('dd-daily', s);
   }
@@ -670,11 +705,11 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   // ---------- share ----------
   function shareText(){
     const sq = {classic:['🟩','🟨'], contrast:['🟧','🟦'], berry:['🟩','🟪']}[root.dataset.palette] || ['🟩','🟨'];
-    const rows = guesses.map(g => evaluate(g).map(r => r === 'correct' ? sq[0] : r === 'present' ? sq[1] : '⬜').join('')).join('\n');
+    const lines = guesses.map(g => evaluate(g).map(r => r === 'correct' ? sq[0] : r === 'present' ? sq[1] : '⬜').join('')).join('\n');
     const date = new Date(dailyDate + 'T12:00').toLocaleDateString('en-GB', {day:'numeric', month:'short'});
     const link = location.origin && location.origin !== 'null' ? '\n' + location.origin + location.pathname : '';
-    return 'Daily Dots ' + date + (isGod ? ' (God mode)' : isExpert ? ' (Expert)' : '') + (hintUsed ? ' 💡' : '') + '\n' +
-      (won ? guesses.length : 'X') + '/5' + (won ? ' · ' + score + ' pts' : '') + '\n' + rows + link;
+    return 'Daily Dots ' + date + (lv !== 'piano' ? ' (' + cfg.name + ')' : '') + (hintUsed ? ' 💡' : '') + '\n' +
+      (won ? guesses.length : 'X') + '/' + rows + (won ? ' · ' + score + ' pts' : '') + '\n' + lines + link;
   }
   async function copyText(txt){
     try { await navigator.clipboard.writeText(txt); return true; }
@@ -693,8 +728,8 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
 
   // ---------- rendering ----------
   function buildGrid(){
-    grid.innerHTML = '';
-    for (let r = 0; r < ROWS; r++){
+    grid.innerHTML = ''; tiles.length = 0;
+    for (let r = 0; r < rows; r++){
       tiles[r] = [];
       for (let c = 0; c < LEN; c++){
         const el = document.createElement('div'); el.className = 'tile';
@@ -708,17 +743,31 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     el.innerHTML = s.name + '<span class="oct">' + s.oct + '</span>';
     el.classList.add('filled'); el.setAttribute('aria-label', s.name + s.oct);
   }
+  function octArrow(g, i){
+    return (g[i] !== melody[i] && mod(g[i] - melody[i], 12) === 0) ? (melody[i] > g[i] ? '↑' : '↓') : '';
+  }
+  const RES_LABEL = {correct:'correct', present:'in the melody, wrong place', absent:'not in the melody'};
+  function colourTile(el, g, i, r){
+    el.classList.add(r);
+    let lab = label(g[i]) + ', ' + RES_LABEL[r];
+    const arrow = r === 'absent' ? octArrow(g, i) : '';
+    if (arrow){
+      const a = document.createElement('span'); a.className = 'arrow'; a.textContent = arrow; el.appendChild(a);
+      lab = label(g[i]) + ', right note, wrong octave: go ' + (arrow === '↑' ? 'up' : 'down');
+    }
+    el.setAttribute('aria-label', lab);
+  }
   function animate(el, cls){
     if (reduce) return;
     el.classList.remove('pop','flip','shake','win'); void el.offsetWidth; el.classList.add(cls);
   }
   function renderRow(popIndex){
-    const r = guesses.length; if (r >= ROWS) return;
+    const r = guesses.length; if (r >= rows) return;
     for (let c = 0; c < LEN; c++) setTile(tiles[r][c], current[c]);
     if (popIndex != null) animate(tiles[r][popIndex], 'pop');
   }
   function markLost(){
-    for (let r = maxRows; r < ROWS; r++) tiles[r].forEach(el => { el.classList.add('lost'); el.setAttribute('aria-label', 'Row lost to the hint'); });
+    for (let r = maxRows; r < rows; r++) tiles[r].forEach(el => { el.classList.add('lost'); el.setAttribute('aria-label', 'Row lost to the hint'); });
   }
   function buildKeyboard(){
     kbd.innerHTML = '';
@@ -732,13 +781,17 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
         b.style.width = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * 0.66 + 4px)';
         b.style.left = 'calc((100% - ' + (gap*(n-1)) + 'px) / ' + n + ' * ' + i + ' + ' + (gap*i - gap/2) + 'px)';
         b.style.transform = 'translateX(-50%)';
-      } else {
-        b.className = 'white';
-        if (mod(m,12) === 0) b.textContent = 'C' + (Math.floor(m/12) - 1);
-      }
+      } else b.className = 'white';
       b.addEventListener('pointerdown', e => { e.preventDefault(); press(m); });
       b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); press(m); } });
       kbd.appendChild(b); keyEls[m] = b;
+    }
+  }
+  function renderKeyLabels(){
+    for (let m = LOW; m <= HIGH; m++){
+      if (isBlack(m)) continue;
+      const pc = mod(m,12), oct = Math.floor(m/12) - 1;
+      keyEls[m].textContent = pc === 0 ? 'C' + oct : (labels ? WHITE_NAMES[pc] : '');
     }
   }
   function renderKeys(){
@@ -765,14 +818,17 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     delBtn.disabled = busy || phase !== 'enter' || current.length === 0;
     checkBtn.classList.toggle('ready', !busy && phase === 'enter' && current.length === LEN);
     hearBtn.disabled = busy || current.length === 0;
-    hearBtn.hidden = isExpert && !over;
-    hintBtn.hidden = !isExpert;
+    hearBtn.hidden = cfg.strict && !over;
+    hintBtn.hidden = !hintAllowed;
     hintBtn.disabled = !canHint();
     newBtn.hidden = mode === 'daily';
     shareBtn.hidden = !(mode === 'daily' && over);
-    const locked = dailyLocked(), shown = locked ? level : levelPref;
+    compareBtn.hidden = !(over && !won && guesses.length);
+    compareBtn.disabled = busy;
+    const locked = dailyLocked(), shown = locked ? lv : lvPref;
     document.querySelectorAll('.lvl').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.level === shown)); b.disabled = locked; });
-    $('levelDesc').textContent = locked ? 'Locked for today’s daily melody. You can change it in Practice.' : LEVEL_DESC[levelPref] + ' Switching starts a new melody.';
+    $('levelDesc').textContent = locked ? 'Locked for today’s daily melody. You can change it in Practice.' : LEVELS[lvPref].desc + ' Switching starts a new melody.';
+    $('levelTag').textContent = cfg.name;
     $('daylabel').textContent = mode === 'daily'
       ? new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'})
       : 'Unlimited melodies';
@@ -787,7 +843,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       if (busy){ lab = 'Listening'; w = 100; }
       else { lab = 'Explore the keyboard'; time = Math.ceil(exploreLeft / 1000) + 's'; w = Math.max(0, exploreLeft / EXPLORE_MS * 100); }
     }
-    else if (phase === 'enter') lab = isExpert ? 'Enter your notes (keys are silent)' : 'Enter your five notes';
+    else if (phase === 'enter') lab = cfg.strict ? 'Enter your notes (keys are silent)' : 'Enter your five notes';
     else if (phase === 'check') lab = 'Checking';
     else if (phase === 'over') lab = 'Free play';
     phaseLabel.textContent = lab; phaseTime.textContent = time; barEl.style.width = w + '%';
@@ -809,16 +865,16 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   function startEnter(){
     clearInterval(timerId);
     phase = 'enter';
-    hint(isExpert ? 'Click your five notes into the row, then press Enter.' : 'Play your five notes into the row, then press Enter.');
+    hint(cfg.strict ? 'Click your five notes into the row, then press Enter.' : 'Play your five notes into the row, then press Enter.');
     renderControls();
   }
   function canHint(){
-    return isExpert && !hintUsed && !over && heard && !busy && phase !== 'check' && (maxRows - guesses.length) >= 3;
+    return hintAllowed && !hintUsed && !over && heard && !busy && phase !== 'check' && (maxRows - guesses.length) >= 3;
   }
   function useHint(){
     if (!canHint()) return;
-    hintUsed = true; maxRows = ROWS - 2; markLost();
-    toast('Hint used: one more listen, two rows gone');
+    hintUsed = true; maxRows = rows - 2; markLost();
+    toast('Hint used: one more listen, two attempts gone');
     saveDaily();
     playSeq(melody, chordOn.checked, () => { if (phase === 'explore') startExplore(); });
   }
@@ -840,15 +896,16 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     g.forEach((m, i) => { if (!status[m] || rank[res[i]] > rank[status[m]]) status[m] = res[i]; });
   }
   function calcScore(row){
-    const s = Math.max(0, ROW_PTS[row] + LISTEN_BONUS * plays - (hintUsed ? HINT_COST : 0));
-    return s * (isGod ? 3 : isExpert ? 2 : 1);
+    const attemptsLeft = rows - (row + 1);
+    const s = Math.max(0, 100 * (attemptsLeft + 1) + LISTEN_BONUS * plays - (hintUsed ? HINT_COST : 0));
+    return s * cfg.mult;
   }
   function press(m){
     const el = keyEls[m]; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 140);
     if (busy) return;
     if (phase === 'listen'){ toast('Play the melody first'); return; }
     if (phase === 'check') return;
-    if (!(phase === 'enter' && isExpert)){ audio(); tone(m, ctx.currentTime, 0.9); }
+    if (!(phase === 'enter' && cfg.strict)){ audio(); tone(m, ctx.currentTime, 0.9); }
     if (phase !== 'enter') return;
     if (current.length >= LEN){ toast('Row full'); return; }
     current.push(m); renderRow(current.length - 1);
@@ -863,7 +920,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     if (busy || phase !== 'enter') return;
     if (current.length < LEN){
       toast('Not enough notes');
-      const r = guesses.length; if (r < ROWS) tiles[r].forEach(el => animate(el, 'shake'));
+      const r = guesses.length; if (r < rows) tiles[r].forEach(el => animate(el, 'shake'));
       return;
     }
     const g = current.slice(), res = evaluate(g), row = guesses.length, id = gameId;
@@ -877,11 +934,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
         const el = tiles[row][i];
         tone(g[i], ctx.currentTime, 0.8, 0.26);
         animate(el, 'flip');
-        setTimeout(() => {
-          if (id !== gameId) return;
-          el.classList.add(r);
-          el.setAttribute('aria-label', label(g[i]) + ', ' + {correct:'correct',present:'in the melody, wrong place',absent:'not in the melody'}[r]);
-        }, reduce ? 0 : 300);
+        setTimeout(() => { if (id === gameId) colourTile(el, g, i, r); }, reduce ? 0 : 300);
       }, i * step);
     });
     setTimeout(() => { if (id === gameId) finish(g, res, row); }, (LEN - 1) * step + (reduce ? 200 : 700));
@@ -892,7 +945,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     if (res.every(r => r === 'correct')){
       over = true; phase = 'over'; won = true; score = calcScore(row);
       tiles[row].forEach((el, i) => setTimeout(() => animate(el, 'win'), i * 100));
-      toast(WIN[row] + '  +' + score, true);
+      toast((row > 0 && row === rows - 1 ? 'Phew. Last row.' : WIN[row]) + '  +' + score, true);
       record(true, row, score);
       afterEnd();
     } else if (guesses.length === maxRows){
@@ -902,7 +955,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       afterEnd();
     } else {
       saveDaily();
-      hint('Attempt ' + (guesses.length + 1) + '. Explore, then enter your notes.' + (plays === 0 ? ' No listens left.' : ''));
+      hint('Attempt ' + (guesses.length + 1) + ' of ' + maxRows + '. Explore, then enter your notes.' + (plays === 0 ? ' No listens left.' : ''));
       startExplore();
       return;
     }
@@ -913,7 +966,7 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       saveDaily(); showDailyDone();
       setTimeout(() => { if (mode === 'daily' && !document.querySelector('dialog[open]')) openStats(); }, 2200);
     } else {
-      hint(won ? score + ' points. Press New melody for another.' : 'That was the melody. Press play to hear it again.');
+      hint(won ? score + ' points. Press New melody for another.' : 'That was the melody. Press Compare to hear where it went wrong.');
     }
   }
   function showDailyDone(){
@@ -939,48 +992,60 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     });
     renderControls();
   }
-  function hear(){ if (!busy && current.length && !(isExpert && !over)) playSeq(current.slice(), false); }
+  function hear(){ if (!busy && current.length && !(cfg.strict && !over)) playSeq(current.slice(), false); }
+  function compare(){
+    if (busy || !over || !guesses.length) return;
+    const last = guesses[guesses.length - 1];
+    toast('Your last guess, then the melody');
+    playSeq(last, false, () => setTimeout(() => { if (over && !busy) playSeq(melody, false); }, 450));
+  }
 
   function applyGameSettings(){
-    PLAYS = isExpert ? 1 : 3;
-    EXPLORE_MS = isExpert ? 8000 : 15000;
-    if (isExpert){ showKey.checked = false; chordOn.checked = true; }
+    PLAYS = cfg.plays; EXPLORE_MS = cfg.explore;
+    if (cfg.strict){ showKey.checked = false; chordOn.checked = true; }
     else { showKey.checked = showKeyPref; chordOn.checked = chordPref; }
-    showKey.disabled = chordOn.disabled = isExpert;
-    $('keyDesc').textContent = isExpert ? 'Locked off in ' + (isGod ? 'God mode.' : 'Expert mode.') : 'Shows the key name above the grid.';
-    $('chordDesc').textContent = isGod ? 'God mode plays a single tonic note instead.' : 'Plays the tonic chord before the melody.';
+    showKey.disabled = chordOn.disabled = cfg.strict;
+    $('keyDesc').textContent = cfg.strict ? 'Locked off in ' + cfg.name + '.' : 'Shows the key name above the grid.';
+    $('chordDesc').textContent = cfg.ref === 'note' ? cfg.name + ' plays a single tonic note instead.' : 'Plays the tonic chord before the melody.';
   }
   function newGame(){
     gameId++; clearInterval(timerId); clearInterval(clockId);
-    let saved = null;
+    let saved = null; legacy = null;
     if (mode === 'daily'){
       dailyDate = today(); saved = loadDaily();
-      level = saved ? (saved.level || (saved.expert ? 'expert' : 'standard')) : levelPref;
-      rand = mulberry32(hashStr((level === 'god' ? 'daily-dots-god-' : 'daily-dots-') + dailyDate));
-    } else { rand = Math.random; level = levelPref; }
-    isGod = level === 'god'; isExpert = level !== 'standard';
+      if (saved){
+        if (saved.lv){ lv = saved.lv; legacy = saved.legacy || null; }
+        else { legacy = saved.level || (saved.expert ? 'expert' : 'standard'); lv = {standard:'piano', expert:'forte', god:'fortissimo'}[legacy]; }
+      } else lv = lvPref;
+      rand = mulberry32(hashStr((legacy === 'expert' ? 'daily-dots-' : SEEDS[lv]) + dailyDate));
+    } else { rand = Math.random; lv = lvPref; }
+    cfg = LEVELS[lv];
+    rows = legacy === 'god' ? 5 : cfg.rows;           // a game started before this update keeps its old rules
+    hintAllowed = cfg.hint || legacy === 'god';
     applyGameSettings();
-    if (isGod){
+    if (lv === 'piano' || legacy === 'expert'){
+      keyMinor = false; key = KEYS[Math.floor(rand() * KEYS.length)];
+      tonicPc = mod(NAT[key.letter] + key.acc, 12); melody = generate();
+    } else if (lv === 'mezzo'){
+      keyMinor = false; key = KEYS[Math.floor(rand() * KEYS.length)];
+      tonicPc = mod(NAT[key.letter] + key.acc, 12); melody = generateWide(MAJOR, MEZZO_OPTS);
+    } else {
       keyMinor = rand() < 0.6;
       key = (keyMinor ? KEYS_MINOR : KEYS)[Math.floor(rand() * 12)];
       tonicPc = mod(NAT[key.letter] + key.acc, 12);
-      melody = generateGod(keyMinor ? (rand() < 0.7 ? HARMONIC_MINOR : MELODIC_MINOR) : MAJOR);
-    } else {
-      keyMinor = false;
-      key = KEYS[Math.floor(rand() * KEYS.length)];
-      tonicPc = mod(NAT[key.letter] + key.acc, 12);
-      melody = generate();
+      melody = generateWide(keyMinor ? (rand() < 0.7 ? HARMONIC_MINOR : MELODIC_MINOR) : MAJOR, lv === 'fortissimo' ? FFF_OPTS : FORTE_OPTS);
     }
     guesses = []; current = []; plays = PLAYS; heard = false; over = false; busy = false; status = {};
-    phase = 'listen'; hintUsed = false; maxRows = ROWS; won = false; score = 0;
+    phase = 'listen'; hintUsed = false; maxRows = rows; won = false; score = 0;
     clearToast(); buildGrid();
     let resume = false;
     if (saved){
       plays = saved.plays; heard = saved.heard; hintUsed = saved.hintUsed;
-      if (hintUsed){ maxRows = ROWS - 2; markLost(); }
+      if (hintUsed){ maxRows = rows - 2; markLost(); }
       saved.guesses.forEach((g, r) => {
+        if (r >= rows) return;
         guesses.push(g); const res = evaluate(g);
-        g.forEach((m, i) => { setTile(tiles[r][i], m); tiles[r][i].classList.add(res[i]); });
+        g.forEach((m, i) => { setTile(tiles[r][i], m); colourTile(tiles[r][i], g, i, res[i]); });
         updateStatus(g, res);
       });
       if (saved.done){ over = true; phase = 'over'; won = saved.won; score = saved.score; }
@@ -989,7 +1054,10 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
     renderKeys(); renderControls();
     if (over) showDailyDone();
     else if (resume){ hint('Welcome back. Explore, then enter your notes.'); startExplore(); }
-    else hint((mode === 'daily' ? 'Today’s melody. ' : '') + (PLAYS === 1 ? 'Press play to listen. One listen, so make it count.' : 'Press play to listen. You get three listens.'));
+    else {
+      const n = ['', 'One listen, so make it count.', 'You get two listens.', 'You get three listens.'][PLAYS];
+      hint((mode === 'daily' ? 'Today’s melody. ' : '') + 'Press play to listen. ' + n);
+    }
   }
 
   // ---------- settings ----------
@@ -1007,6 +1075,9 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
       [r, r+4, r+7, r+12].forEach((m, i) => tone(m, t + i*0.14, 0.6, 0.28));
     }
   }
+  function applyLabels(on){
+    labels = on; labelsOn.checked = on; store.set('dd-labels', on ? '1' : '0'); renderKeyLabels();
+  }
   function setMode(m){
     if (m === mode) return;
     mode = m;
@@ -1019,14 +1090,19 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   checkBtn.addEventListener('click', check);
   delBtn.addEventListener('click', del);
   hearBtn.addEventListener('click', hear);
+  compareBtn.addEventListener('click', compare);
   newBtn.addEventListener('click', newGame);
   shareBtn.addEventListener('click', () => share(shareBtn));
   $('statsShare').addEventListener('click', () => share($('statsShare')));
-  showKey.addEventListener('change', () => { if (!isExpert) showKeyPref = showKey.checked; renderControls(); });
-  chordOn.addEventListener('change', () => { if (!isExpert) chordPref = chordOn.checked; });
+  $('soundOk').addEventListener('click', () => { store.set('dd-sound-ok','1'); $('soundNote').hidden = true; });
+  showKey.addEventListener('change', () => { if (!cfg.strict) showKeyPref = showKey.checked; renderControls(); });
+  chordOn.addEventListener('change', () => { if (!cfg.strict) chordPref = chordOn.checked; });
+  labelsOn.addEventListener('change', () => applyLabels(labelsOn.checked));
   document.querySelectorAll('.lvl').forEach(b => b.addEventListener('click', () => {
-    if (dailyLocked() || b.dataset.level === levelPref) return;
-    levelPref = b.dataset.level; store.set('dd-level', levelPref); newGame(); renderControls();
+    if (dailyLocked() || b.dataset.level === lvPref) return;
+    lvPref = b.dataset.level; store.set('dd-lv', lvPref);
+    applyLabels(LEVELS[lvPref].labels);
+    newGame(); renderControls();
   }));
   document.querySelectorAll('.palette').forEach(b => b.addEventListener('click', () => applyPalette(b.dataset.palette)));
   document.querySelectorAll('.inst').forEach(b => b.addEventListener('click', () => applyInst(b.dataset.inst, true)));
@@ -1043,17 +1119,34 @@ button:focus-visible,.switch:focus-visible{outline:3px solid var(--present);outl
   document.addEventListener('keydown', e => {
     if (document.querySelector('dialog[open]')) return;
     if (e.target.closest('input')) return;
-    if (e.key === 'Backspace'){ e.preventDefault(); del(); }
-    else if (e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); check(); }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === 'Backspace'){ e.preventDefault(); del(); }
+    else if (k === 'Enter' && !e.target.closest('button')){ e.preventDefault(); check(); }
+    else if (k in KEYMAP){
+      e.preventDefault(); if (e.repeat) return;
+      const m = kbBase + KEYMAP[k];
+      if (m >= LOW && m <= HIGH) press(m);
+    }
+    else if (k === 'z' || k === 'x'){
+      kbBase = Math.min(72, Math.max(48, kbBase + (k === 'x' ? 12 : -12)));
+      toast('Laptop keys now start on C' + (kbBase/12 - 1));
+    }
   });
 
   const savedPal = store.get('dd-palette');
   applyPalette(['classic','contrast','berry'].includes(savedPal) ? savedPal : 'classic');
   const savedInst = store.get('dd-inst');
   applyInst(VOICES[savedInst] ? savedInst : 'piano', false);
-  const savedLevel = store.get('dd-level');
-  levelPref = ['standard','expert','god'].includes(savedLevel) ? savedLevel : (store.get('dd-expert') === '1' ? 'expert' : 'standard');
+  const savedLv = store.get('dd-lv'), oldLevel = store.get('dd-level');
+  lvPref = LEVELS[savedLv] ? savedLv
+    : oldLevel ? ({standard:'piano', expert:'forte', god:'fortissimo'}[oldLevel] || 'piano')
+    : store.get('dd-expert') === '1' ? 'forte' : 'piano';
   buildKeyboard();
+  const savedLabels = store.get('dd-labels');
+  labels = savedLabels === null ? LEVELS[lvPref].labels : savedLabels === '1';
+  labelsOn.checked = labels; renderKeyLabels();
+  $('soundNote').hidden = store.get('dd-sound-ok') === '1';
   key = KEYS[0]; tonicPc = 0;
   newGame();
   if (!store.get('dd-seen-help')){ store.set('dd-seen-help','1'); $('helpDlg').showModal(); }
